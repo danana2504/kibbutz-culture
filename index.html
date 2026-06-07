@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="he" dir="rtl">
-<head>
+<html lang="he" dir="rtl"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>מרכז תרבות קיבוצי</title>
@@ -216,14 +214,23 @@ textarea{resize:vertical}
 }
 @media(max-width:360px){.bnb-label{display:none}.bnb{min-width:40px}}
 </style>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
+
+<!-- LOADING SCREEN -->
+<div id="fb-loading" style="position: fixed; inset: 0px; background: rgb(255, 255, 255); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px;">
+  <div style="width:48px;height:48px;border:4px solid #e2e0d8;border-top-color:#2A9D8F;border-radius:50%;animation:spin 1s linear infinite"></div>
+  <div style="font-size:14px;color:#7A7870;font-family:sans-serif">מתחבר לענן...</div>
+</div>
 
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="tb-t"><i class="ti ti-building-community"></i> מרכז תרבות</div>
   <div style="display:flex;align-items:center;gap:8px">
-    <select class="kb-s" id="kb-select" onchange="switchKb(this.value)"></select>
+    <select class="kb-s" id="kb-select" onchange="switchKb(this.value)"><option value="kb0" selected="">קיבוץ המעפיל</option><option value="kb1">עין החורש</option><option value="kb2">גבעת חיים איחוד</option><option value="kb3">גבעת חיים מאוחד</option><option value="kb4">מגל</option></select>
     <button onclick="openAI()" style="background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:20px;padding:5px 12px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:5px;font-family:inherit"><i class="ti ti-sparkles"></i><span class="hide-mobile">עוזרת התרבות</span><span style="background:rgba(255,255,255,.25);border-radius:10px;padding:1px 6px;font-size:9px;font-weight:700;letter-spacing:.5px">AI</span></button>
     <button onclick="G('settings')" style="background:rgba(255,255,255,.18);border:none;color:#fff;border-radius:20px;padding:5px 11px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:4px;font-family:inherit"><i class="ti ti-settings"></i></button>
   </div>
@@ -231,7 +238,7 @@ textarea{resize:vertical}
 
 <!-- TOP NAV (desktop) -->
 <nav class="topnav">
-  <button class="nb active" onclick="G('dash',this)"><i class="ti ti-layout-dashboard"></i> בית</button>
+  <button class="nb" onclick="G('dash',this)"><i class="ti ti-layout-dashboard"></i> בית</button>
   <button class="nb" onclick="G('events',this)"><i class="ti ti-calendar-event"></i> אירועים</button>
   <button class="nb" onclick="G('calendar',this)"><i class="ti ti-calendar-month"></i> לוח שנה</button>
   <button class="nb" onclick="G('voldb',this)"><i class="ti ti-users"></i> מתנדבים</button>
@@ -239,12 +246,12 @@ textarea{resize:vertical}
   <button class="nb" onclick="G('gbudget',this)"><i class="ti ti-coins"></i> תקציב</button>
   <button class="nb" onclick="G('gequip',this)"><i class="ti ti-tool"></i> ציוד</button>
   <button class="nb" onclick="G('coords',this)"><i class="ti ti-id-badge"></i> רכזות</button>
-  <button class="nb" onclick="G('settings',this)"><i class="ti ti-settings"></i> הגדרות</button>
+  <button class="nb active" onclick="G('settings',this)"><i class="ti ti-settings"></i> הגדרות</button>
 </nav>
 
 <!-- BOTTOM NAV (mobile) -->
 <nav class="bottomnav">
-  <button class="bnb active" id="bnb-dash" onclick="G('dash',null,'dash')">
+  <button class="bnb" id="bnb-dash" onclick="G('dash',null,'dash')">
     <div class="bnb-icon"><i class="ti ti-layout-dashboard"></i></div>
     <div class="bnb-label">בית</div>
   </button>
@@ -287,15 +294,15 @@ textarea{resize:vertical}
 <div class="main">
 
 <!-- DASHBOARD -->
-<div class="pg active" id="pg-dash">
+<div class="pg" id="pg-dash">
 
   <!-- סטטיסטיקות עליונות -->
   <div class="sg" style="margin-bottom:14px">
-    <div class="sc" style="background:#EAF3FE"><div class="sn" style="color:#1565C0" id="d-ec">0</div><div class="sl" style="color:#1565C0">אירועים קרובים</div></div>
-    <div class="sc" style="background:#FFF3E0"><div class="sn" style="color:var(--co)" id="d-miss">0</div><div class="sl" style="color:var(--co)">מתנדבים חסרים</div></div>
+    <div class="sc" style="background:#EAF3FE"><div class="sn" style="color:#1565C0" id="d-ec">2</div><div class="sl" style="color:#1565C0">אירועים קרובים</div></div>
+    <div class="sc" style="background:#FFF3E0"><div class="sn" style="color:var(--co)" id="d-miss">17</div><div class="sl" style="color:var(--co)">מתנדבים חסרים</div></div>
     <div class="sc" style="background:#F3E8FF"><div class="sn" style="color:#6B21A8" id="d-vc">0</div><div class="sl" style="color:#6B21A8">מתנדבים מאויישים</div></div>
-    <div class="sc" style="background:var(--tl)"><div class="sn" style="color:var(--tt)" id="d-bud">₪0</div><div class="sl" style="color:var(--td)">יתרת תקציב</div></div>
-  </div>
+    <div class="sc" style="background:var(--tl)"><div class="sn" style="color:var(--tt)" id="d-bud">₪10,700</div><div class="sl" style="color:var(--td)">יתרת תקציב</div></div>
+  </div><div id="dash-debug" style="font-size: 10px; color: red; padding: 4px; margin-bottom: 8px; background: rgb(255, 243, 243); border-radius: 4px;"></div>
 
   <!-- פעולות מהירות -->
   <div style="display:flex;gap:8px;margin-bottom:14px">
@@ -304,16 +311,16 @@ textarea{resize:vertical}
   </div>
 
   <!-- האירוע הקרוב -->
-  <div id="dash-next-evt" style="margin-bottom:14px"></div>
+  <div id="dash-next-evt" style="margin-bottom:14px"><div class="card" style="border:2px solid var(--teal);padding:0;overflow:hidden"><div style="background:var(--td);color:#fff;padding:8px 14px;font-size:11px;font-weight:600;display:flex;justify-content:space-between;align-items:center"><span><i class="ti ti-star"></i> האירוע הקרוב</span><span style="background:rgba(255,255,255,.2);border-radius:12px;padding:2px 10px">בעוד 60 ימים</span></div><div style="padding:14px"><div style="font-size:16px;font-weight:700;margin-bottom:6px">קמפינג בריכה</div><div style="font-size:12px;color:var(--txt2);display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px"><span>📅 6 אוגוסט</span><span>🕐 17:00</span><span>📍 בריכה</span></div><div style="display:flex;gap:8px;margin-bottom:12px"><div class="sc" style="flex:1"><div class="sn" style="font-size:14px">₪730 / ₪1,800</div><div class="sl">ניצול תקציב</div><div style="font-size:10px;margin-top:2px;color:var(--tt)">יתרה: ₪1,070</div></div><div class="sc warn" style="flex:1"><div class="sn" style="font-size:14px">3</div><div class="sl">מתנדבים חסרים</div></div><div class="sc" style="flex:1"><div class="sn" style="font-size:14px">0</div><div class="sl">מתנדבים</div></div></div><span class="tag tc" style="font-size:10px">הקמה (3 חסרים) </span><span class="tag tc" style="font-size:10px">כיבוד (2 חסרים) </span><span class="tag tc" style="font-size:10px">הגשה בעמדת אוכל (2 חסרים) </span><div style="display:flex;gap:6px"><button class="btn bp bsm" style="flex:1;justify-content:center" onclick="openEvt(3)"><i class="ti ti-settings"></i> נהל אירוע</button><button class="btn bsm" style="flex:1;justify-content:center" onclick="CE=3;openEvt(3);openASN()"><i class="ti ti-user-plus"></i> שבץ מתנדב</button></div></div></div></div>
 
   <!-- התראות חכמות -->
-  <div id="dash-alerts" style="margin-bottom:14px"></div>
+  <div id="dash-alerts" style="margin-bottom:14px"><div class="card" style="padding:10px 14px"><div style="font-size:12px;font-weight:600;color:var(--txt2);margin-bottom:8px">💡 תובנות חכמות</div><div onclick="openEvt(3)" style="display:flex;align-items:flex-start;gap:8px;padding:7px 10px;margin-bottom:4px;background:var(--al);border-radius:var(--rm);cursor:pointer"><span style="font-size:15px;flex-shrink:0">👥</span><span style="font-size:12px;color:var(--at);flex:1">קמפינג בריכה – עוד 7 מתנדבים חסרים</span><i class="ti ti-chevron-left" style="color:var(--at);opacity:.6;flex-shrink:0"></i></div><div onclick="openEvt(4)" style="display:flex;align-items:flex-start;gap:8px;padding:7px 10px;margin-bottom:4px;background:var(--al);border-radius:var(--rm);cursor:pointer"><span style="font-size:15px;flex-shrink:0">👥</span><span style="font-size:12px;color:var(--at);flex:1">מירוץ המעפיל – עוד 10 מתנדבים חסרים</span><i class="ti ti-chevron-left" style="color:var(--at);opacity:.6;flex-shrink:0"></i></div></div></div>
 
   <!-- אירועים נוספים -->
-  <div id="dash-upcoming" style="margin-bottom:14px"></div>
+  <div id="dash-upcoming" style="margin-bottom:14px"><div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><span style="font-size:12px;font-weight:600">אירועים נוספים</span><button class="btn bsm" onclick="G('events')">כל האירועים</button></div><div class="row" style="cursor:pointer" onclick="openEvt(4)"><div style="flex:1"><div style="font-size:12px;font-weight:600">מירוץ המעפיל</div><div style="font-size:11px;color:var(--txt2)">15 אוקטובר · שבילי הקיבוץ</div></div><span class="tag tc" style="font-size:10px">4 חסרים</span><i class="ti ti-chevron-left" style="color:var(--txt2)"></i></div></div></div>
 
   <!-- משימות דחופות -->
-  <div id="dash-tasks" style="margin-bottom:14px"></div>
+  <div id="dash-tasks" style="margin-bottom:14px"><div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:12px;font-weight:600">משימות פתוחות</span><button class="btn bsm" onclick="G('mytasks')">כולן</button></div><div class="row"><input type="checkbox" class="chk" onchange="togMT(0,this.checked)"><span style="flex:1;font-size:12px">לתאם עם הדי-ג'יי לטקס שבועות</span><span class="tag tg" style="font-size:10px">לוגיסטיקה</span><button class="ib del" onclick="rmMT(0,this)"><i class="ti ti-x" style="font-size:12px"></i></button></div><div class="row"><input type="checkbox" class="chk" onchange="togMT(1,this.checked)"><span style="flex:1;font-size:12px">להזמין פרחים לקישוט</span><span class="tag ta" style="font-size:10px">תוכן</span><button class="ib del" onclick="rmMT(1,this)"><i class="ti ti-x" style="font-size:12px"></i></button></div><div class="row"><input type="checkbox" class="chk" onchange="togMT(2,this.checked)"><span style="flex:1;font-size:12px">לשלוח תזכורת למתנדבים</span><span class="tag tc" style="font-size:10px">פרסום</span><button class="ib del" onclick="rmMT(2,this)"><i class="ti ti-x" style="font-size:12px"></i></button></div><div class="row"><input type="checkbox" class="chk" onchange="togMT(4,this.checked)"><span style="flex:1;font-size:12px">להדפיס תוכניות ערב</span><span class="tag ta" style="font-size:10px">תוכן</span><button class="ib del" onclick="rmMT(4,this)"><i class="ti ti-x" style="font-size:12px"></i></button></div></div></div>
 
 </div>
 
@@ -365,7 +372,7 @@ textarea{resize:vertical}
     </div>
   </div>
 
-  <div id="evts-list"></div>
+  <div id="evts-list"><div class="evt-card"><div class="evt-hero"><div class="evt-countdown">60 ימים</div><div class="evt-hero-name" style="display:flex;align-items:center;gap:8px">קמפינג בריכה<button onclick="CE=3;addToGoogleCalendar()" title="הוסף ליומן Google" style="background:none;border:none;cursor:pointer;padding:0;font-size:15px;line-height:1;flex-shrink:0;opacity:.8">📅</button></div><div class="evt-hero-meta"><span><i class="ti ti-calendar" style="font-size:10px"></i> 6 אוגוסט</span><span><i class="ti ti-clock" style="font-size:10px"></i> 17:00</span><span><i class="ti ti-map-pin" style="font-size:10px"></i> בריכה</span><span class="tag tp" style="font-size:10px">עתידי</span></div><div class="evt-hero-stats" style="justify-content:flex-start"><div style="width:33%;background:var(--sur);border:1px solid var(--bdr);border-radius:7px;padding:5px 9px"><div style="font-size:9px;color:var(--txt2);margin-bottom:2px">תקציב</div><div style="font-size:11px;font-weight:600;color:var(--tt);white-space:nowrap">₪730 / ₪1,800</div><div style="height:3px;background:var(--bdr);border-radius:3px;overflow:hidden;margin-top:3px"><div style="height:100%;width:41%;background:var(--teal);border-radius:3px"></div></div></div><div class="evt-stat warn" style="animation:pulse 1s ease-in-out 2"><div class="evt-stat-n">0/7</div><div class="evt-stat-l">שובצו</div></div></div></div><div class="evt-actions"><button class="evt-action" onclick="openEvt(3)"><i class="ti ti-settings"></i> נהל</button><button class="evt-action primary" onclick="event.stopPropagation();CE=3;volReturnPage=curPage;openEvt(3);openASN()"><i class="ti ti-user-plus"></i> שיבוץ מתנדבים (7)</button></div></div><div class="evt-card"><div class="evt-hero"><div class="evt-countdown">130 ימים</div><div class="evt-hero-name" style="display:flex;align-items:center;gap:8px">מירוץ המעפיל<button onclick="CE=4;addToGoogleCalendar()" title="הוסף ליומן Google" style="background:none;border:none;cursor:pointer;padding:0;font-size:15px;line-height:1;flex-shrink:0;opacity:.8">📅</button></div><div class="evt-hero-meta"><span><i class="ti ti-calendar" style="font-size:10px"></i> 15 אוקטובר</span><span><i class="ti ti-clock" style="font-size:10px"></i> 07:00</span><span><i class="ti ti-map-pin" style="font-size:10px"></i> שבילי הקיבוץ</span><span class="tag tp" style="font-size:10px">עתידי</span></div><div class="evt-hero-stats" style="justify-content:flex-start"><div style="width:33%;background:var(--sur);border:1px solid var(--bdr);border-radius:7px;padding:5px 9px"><div style="font-size:9px;color:var(--txt2);margin-bottom:2px">תקציב</div><div style="font-size:11px;font-weight:600;color:var(--tt);white-space:nowrap">₪750 / ₪3,000</div><div style="height:3px;background:var(--bdr);border-radius:3px;overflow:hidden;margin-top:3px"><div style="height:100%;width:25%;background:var(--teal);border-radius:3px"></div></div></div><div class="evt-stat warn" style="animation:pulse 1s ease-in-out 2"><div class="evt-stat-n">0/10</div><div class="evt-stat-l">שובצו</div></div></div></div><div class="evt-actions"><button class="evt-action" onclick="openEvt(4)"><i class="ti ti-settings"></i> נהל</button><button class="evt-action primary" onclick="event.stopPropagation();CE=4;volReturnPage=curPage;openEvt(4);openASN()"><i class="ti ti-user-plus"></i> שיבוץ מתנדבים (10)</button></div></div><div class="evt-card evt-status-done"><div class="evt-hero"><div class="evt-hero-name" style="display:flex;align-items:center;gap:8px">חגיגות 80 לקיבוץ<button onclick="CE=2;addToGoogleCalendar()" title="הוסף ליומן Google" style="background:none;border:none;cursor:pointer;padding:0;font-size:15px;line-height:1;flex-shrink:0;opacity:.8">📅</button></div><div class="evt-hero-meta"><span><i class="ti ti-calendar" style="font-size:10px"></i> 1 מרץ</span><span><i class="ti ti-clock" style="font-size:10px"></i> 18:00</span><span><i class="ti ti-map-pin" style="font-size:10px"></i> דשא הגדול</span><span class="tag tgr" style="font-size:10px">הסתיים</span></div><div class="evt-hero-stats" style="justify-content:flex-start"><div style="width:33%;background:var(--sur);border:1px solid var(--bdr);border-radius:7px;padding:5px 9px"><div style="font-size:9px;color:var(--txt2);margin-bottom:2px">תקציב</div><div style="font-size:11px;font-weight:600;color:var(--tt);white-space:nowrap">₪2,600 / ₪5,000</div><div style="height:3px;background:var(--bdr);border-radius:3px;overflow:hidden;margin-top:3px"><div style="height:100%;width:52%;background:var(--teal);border-radius:3px"></div></div></div><div class="evt-stat warn" style="animation:pulse 1s ease-in-out 2"><div class="evt-stat-n">10/29</div><div class="evt-stat-l">שובצו</div></div></div></div><div class="evt-actions"><button class="evt-action" onclick="openEvt(2)"><i class="ti ti-settings"></i> נהל</button><button class="evt-action primary" onclick="event.stopPropagation();CE=2;volReturnPage=curPage;openEvt(2);openASN()"><i class="ti ti-user-plus"></i> שיבוץ מתנדבים (19)</button></div></div><div class="evt-card evt-status-done"><div class="evt-hero"><div class="evt-hero-name" style="display:flex;align-items:center;gap:8px">טקס שבועות<button onclick="CE=0;addToGoogleCalendar()" title="הוסף ליומן Google" style="background:none;border:none;cursor:pointer;padding:0;font-size:15px;line-height:1;flex-shrink:0;opacity:.8">📅</button></div><div class="evt-hero-meta"><span><i class="ti ti-calendar" style="font-size:10px"></i> 23 מאי</span><span><i class="ti ti-clock" style="font-size:10px"></i> 18:00</span><span><i class="ti ti-map-pin" style="font-size:10px"></i> שדות</span><span class="tag tgr" style="font-size:10px">הסתיים</span></div><div class="evt-hero-stats" style="justify-content:flex-start"><div style="width:33%;background:var(--sur);border:1px solid var(--bdr);border-radius:7px;padding:5px 9px"><div style="font-size:9px;color:var(--txt2);margin-bottom:2px">תקציב</div><div style="font-size:11px;font-weight:600;color:var(--tt);white-space:nowrap">₪750 / ₪2,000</div><div style="height:3px;background:var(--bdr);border-radius:3px;overflow:hidden;margin-top:3px"><div style="height:100%;width:38%;background:var(--teal);border-radius:3px"></div></div></div><div class="evt-stat warn" style="animation:pulse 1s ease-in-out 2"><div class="evt-stat-n">8/18</div><div class="evt-stat-l">שובצו</div></div></div></div><div class="evt-actions"><button class="evt-action" onclick="openEvt(0)"><i class="ti ti-settings"></i> נהל</button><button class="evt-action primary" onclick="event.stopPropagation();CE=0;volReturnPage=curPage;openEvt(0);openASN()"><i class="ti ti-user-plus"></i> שיבוץ מתנדבים (10)</button></div></div><div class="evt-card evt-status-done"><div class="evt-hero"><div class="evt-hero-name" style="display:flex;align-items:center;gap:8px">מסיבת אביב<button onclick="CE=1;addToGoogleCalendar()" title="הוסף ליומן Google" style="background:none;border:none;cursor:pointer;padding:0;font-size:15px;line-height:1;flex-shrink:0;opacity:.8">📅</button></div><div class="evt-hero-meta"><span><i class="ti ti-calendar" style="font-size:10px"></i> 31 מאי</span><span><i class="ti ti-clock" style="font-size:10px"></i> 20:00</span><span><i class="ti ti-map-pin" style="font-size:10px"></i> בריכה</span><span class="tag tgr" style="font-size:10px">הסתיים</span></div><div class="evt-hero-stats" style="justify-content:flex-start"><div style="width:33%;background:var(--sur);border:1px solid var(--bdr);border-radius:7px;padding:5px 9px"><div style="font-size:9px;color:var(--txt2);margin-bottom:2px">תקציב</div><div style="font-size:11px;font-weight:600;color:var(--tt);white-space:nowrap">₪1,230 / ₪1,500</div><div style="height:3px;background:var(--bdr);border-radius:3px;overflow:hidden;margin-top:3px"><div style="height:100%;width:82%;background:#E76F1A;border-radius:3px"></div></div></div><div class="evt-stat warn" style="animation:pulse 1s ease-in-out 2"><div class="evt-stat-n">2/9</div><div class="evt-stat-l">שובצו</div></div></div></div><div class="evt-actions"><button class="evt-action" onclick="openEvt(1)"><i class="ti ti-settings"></i> נהל</button><button class="evt-action primary" onclick="event.stopPropagation();CE=1;volReturnPage=curPage;openEvt(1);openASN()"><i class="ti ti-user-plus"></i> שיבוץ מתנדבים (7)</button></div></div></div>
 </div>
 
 <!-- CALENDAR -->
@@ -400,12 +407,12 @@ textarea{resize:vertical}
 <!-- MY TASKS -->
 <div class="pg" id="pg-mytasks">
   <div class="sh"><span class="sh-t">משימות רכזת</span></div>
-  <div class="tabs" id="mt-cat-tabs"><span class="tab active" onclick="filterMT('all',this)">הכל</span></div>
+  <div class="tabs" id="mt-cat-tabs"><span class="tab active" onclick="filterMT('all',this)">הכל</span><span class="tab" onclick="filterMT('לוגיסטיקה',this)">לוגיסטיקה</span><span class="tab" onclick="filterMT('תוכן',this)">תוכן</span><span class="tab" onclick="filterMT('פרסום',this)">פרסום</span><span class="tab" onclick="filterMT('כללי',this)">כללי</span><span class="tab" onclick="filterMT('דחוף',this)">דחוף</span><span class="tab" onclick="filterMT('שוטף',this)">שוטף</span><span class="tab" onclick="filterMT('מנהלי',this)">מנהלי</span></div>
   <div class="card">
-    <div id="mt-list"></div>
+    <div id="mt-list"><div class="row"><input type="checkbox" class="chk" onchange="togMT(0,this.checked)"><div style="flex:1;min-width:0"><div style="font-size:12px">לתאם עם הדי-ג'יי לטקס שבועות</div></div><span class="tag tg" style="font-size:10px">לוגיסטיקה</span><button class="ib del" onclick="rmMT(0,this)"><i class="ti ti-trash" style="font-size:12px"></i></button></div><div class="row"><input type="checkbox" class="chk" onchange="togMT(1,this.checked)"><div style="flex:1;min-width:0"><div style="font-size:12px">להזמין פרחים לקישוט</div></div><span class="tag ta" style="font-size:10px">תוכן</span><button class="ib del" onclick="rmMT(1,this)"><i class="ti ti-trash" style="font-size:12px"></i></button></div><div class="row"><input type="checkbox" class="chk" onchange="togMT(2,this.checked)"><div style="flex:1;min-width:0"><div style="font-size:12px">לשלוח תזכורת למתנדבים</div></div><span class="tag tc" style="font-size:10px">פרסום</span><button class="ib del" onclick="rmMT(2,this)"><i class="ti ti-trash" style="font-size:12px"></i></button></div><div class="row"><input type="checkbox" class="chk" checked="" onchange="togMT(3,this.checked)"><div style="flex:1;min-width:0"><div style="font-size:12px;text-decoration:line-through;opacity:.55">לבדוק תקינות מערכת השמע</div></div><span class="tag tg" style="font-size:10px">לוגיסטיקה</span><button class="ib del" onclick="rmMT(3,this)"><i class="ti ti-trash" style="font-size:12px"></i></button></div><div class="row"><input type="checkbox" class="chk" onchange="togMT(4,this.checked)"><div style="flex:1;min-width:0"><div style="font-size:12px">להדפיס תוכניות ערב</div></div><span class="tag ta" style="font-size:10px">תוכן</span><button class="ib del" onclick="rmMT(4,this)"><i class="ti ti-trash" style="font-size:12px"></i></button></div><div class="row"><input type="checkbox" class="chk" checked="" onchange="togMT(5,this.checked)"><div style="flex:1;min-width:0"><div style="font-size:12px;text-decoration:line-through;opacity:.55">לאשר תקציב עם הוועד</div></div><span class="tag tp" style="font-size:10px">מנהלי</span><button class="ib del" onclick="rmMT(5,this)"><i class="ti ti-trash" style="font-size:12px"></i></button></div></div>
     <div style="display:flex;gap:6px;margin-top:9px">
       <input type="text" id="qt-my" placeholder="הוסף משימה מהירה...">
-      <select id="qt-cat" style="width:auto;min-width:90px"></select>
+      <select id="qt-cat" style="width:auto;min-width:90px"><option selected="">לוגיסטיקה</option><option>תוכן</option><option>פרסום</option><option>כללי</option><option>דחוף</option><option>שוטף</option><option>מנהלי</option></select>
       <button class="btn bsm bp" onclick="qMT()"><i class="ti ti-plus"></i></button>
     </div>
   </div>
@@ -421,16 +428,16 @@ textarea{resize:vertical}
   </div>
   <div class="card" style="margin-bottom:10px">
     <div style="display:flex;gap:9px">
-      <div class="sc" style="flex:1;background:var(--tl)"><div class="sn" style="color:var(--tt)" id="gb-total">₪0</div><div class="sl">תקציב שנתי</div></div>
-      <div class="sc" style="flex:1;background:var(--al)"><div class="sn" style="color:var(--at)" id="gb-alloc">₪0</div><div class="sl">הוקצה לאירועים</div></div>
-      <div class="sc" style="flex:1;background:var(--pl)"><div class="sn" style="color:var(--pt)" id="gb-spent">₪0</div><div class="sl">הוצא בפועל</div></div>
-      <div class="sc" style="flex:1;background:var(--tl)"><div class="sn" style="color:var(--tt)" id="gb-remain">₪0</div><div class="sl">רזרבה</div></div>
+      <div class="sc" style="flex:1;background:var(--tl)"><div class="sn" style="color:var(--tt)" id="gb-total">₪24,000</div><div class="sl">תקציב שנתי</div></div>
+      <div class="sc" style="flex:1;background:var(--al)"><div class="sn" style="color:var(--at)" id="gb-alloc">₪13,300</div><div class="sl">הוקצה לאירועים</div></div>
+      <div class="sc" style="flex:1;background:var(--pl)"><div class="sn" style="color:var(--pt)" id="gb-spent">₪6,060</div><div class="sl">הוצא בפועל</div></div>
+      <div class="sc" style="flex:1;background:var(--tl)"><div class="sn" style="color:var(--tt)" id="gb-remain">₪10,700</div><div class="sl">רזרבה</div></div>
     </div>
   </div>
-  <div class="card" style="margin-bottom:10px" id="gb-pie-card" style="display:none">
-    <div id="gb-pie"></div>
+  <div class="card" style="margin-bottom:10px" id="gb-pie-card">
+    <div id="gb-pie"><div style="display:flex;align-items:center;gap:16px"><svg viewBox="0 0 100 100" width="100" height="100" style="flex-shrink:0"><path d="M 50 50 L 50 6 A 44 44 0 0 1 72 11.8948822334847 Z" fill="#2A9D8F" opacity="0.85" title="טקס שבועות"></path><path d="M 50 50 L 72 11.8948822334847 A 44 44 0 0 1 84.90754697281434 23.21449712361629 Z" fill="#E76F1A" opacity="0.85" title="מסיבת אביב"></path><path d="M 50 50 L 84.90754697281434 23.21449712361629 A 44 44 0 0 1 84.90754697281434 76.7855028763837 Z" fill="#C9622A" opacity="0.85" title="חגיגות 80 לקיבוץ"></path><path d="M 50 50 L 84.90754697281434 76.7855028763837 A 44 44 0 0 1 68.94248825956498 89.71375251139386 Z" fill="#4A4292" opacity="0.85" title="קמפינג בריכה"></path><path d="M 50 50 L 68.94248825956498 89.71375251139386 A 44 44 0 0 1 35.31249819371408 91.47622560805584 Z" fill="#1F7A6E" opacity="0.85" title="מירוץ המעפיל"></path><path d="M 50 50 L 35.31249819371408 91.47622560805584 A 44 44 0 0 1 50 6 Z" fill="#E2E0D8"></path></svg><div style="flex:1"><div style="display:flex;align-items:center;gap:5px;font-size:10px;margin-bottom:3px"><div style="width:10px;height:10px;border-radius:2px;background:#2A9D8F;flex-shrink:0"></div><span style="color:var(--txt2)">טקס שבועות</span><span style="color:var(--txt);font-weight:600;margin-right:auto">₪2,000</span></div><div style="display:flex;align-items:center;gap:5px;font-size:10px;margin-bottom:3px"><div style="width:10px;height:10px;border-radius:2px;background:#E76F1A;flex-shrink:0"></div><span style="color:var(--txt2)">מסיבת אביב</span><span style="color:var(--txt);font-weight:600;margin-right:auto">₪1,500</span></div><div style="display:flex;align-items:center;gap:5px;font-size:10px;margin-bottom:3px"><div style="width:10px;height:10px;border-radius:2px;background:#C9622A;flex-shrink:0"></div><span style="color:var(--txt2)">חגיגות 80 לקיבוץ</span><span style="color:var(--txt);font-weight:600;margin-right:auto">₪5,000</span></div><div style="display:flex;align-items:center;gap:5px;font-size:10px;margin-bottom:3px"><div style="width:10px;height:10px;border-radius:2px;background:#4A4292;flex-shrink:0"></div><span style="color:var(--txt2)">קמפינג בריכה</span><span style="color:var(--txt);font-weight:600;margin-right:auto">₪1,800</span></div><div style="display:flex;align-items:center;gap:5px;font-size:10px;margin-bottom:3px"><div style="width:10px;height:10px;border-radius:2px;background:#1F7A6E;flex-shrink:0"></div><span style="color:var(--txt2)">מירוץ המעפיל</span><span style="color:var(--txt);font-weight:600;margin-right:auto">₪3,000</span></div><div style="display:flex;align-items:center;gap:5px;font-size:10px"><div style="width:10px;height:10px;border-radius:2px;background:#E2E0D8;flex-shrink:0"></div><span style="color:var(--txt2)">רזרבה</span><span style="color:var(--tt);font-weight:600;margin-right:auto">₪10,700</span></div></div></div></div>
   </div>
-  <div class="card"><div id="gb-list"></div></div>
+  <div class="card"><div id="gb-list"><div class="row" style="flex-direction:column;align-items:flex-start;gap:4px"><div style="display:flex;align-items:center;gap:7px;width:100%"><span style="flex:1;font-size:12px;font-weight:600">טקס שבועות</span><span style="font-size:11px;color:var(--txt2)">₪750 / ₪2,000</span><button class="ib" onclick="openAllocModal(0)"><i class="ti ti-edit"></i></button></div><div style="height:4px;background:var(--bg);border-radius:4px;overflow:hidden;width:100%;border:1px solid var(--bdr)"><div style="height:100%;width:38%;background:var(--teal);border-radius:4px"></div></div><div style="font-size:10px;color:var(--txt2)">יתרה: ₪1,250</div></div><div class="row" style="flex-direction:column;align-items:flex-start;gap:4px"><div style="display:flex;align-items:center;gap:7px;width:100%"><span style="flex:1;font-size:12px;font-weight:600">מסיבת אביב</span><span style="font-size:11px;color:var(--txt2)">₪1,230 / ₪1,500</span><button class="ib" onclick="openAllocModal(1)"><i class="ti ti-edit"></i></button></div><div style="height:4px;background:var(--bg);border-radius:4px;overflow:hidden;width:100%;border:1px solid var(--bdr)"><div style="height:100%;width:82%;background:var(--co);border-radius:4px"></div></div><div style="font-size:10px;color:var(--txt2)">יתרה: ₪270</div></div><div class="row" style="flex-direction:column;align-items:flex-start;gap:4px"><div style="display:flex;align-items:center;gap:7px;width:100%"><span style="flex:1;font-size:12px;font-weight:600">חגיגות 80 לקיבוץ</span><span style="font-size:11px;color:var(--txt2)">₪2,600 / ₪5,000</span><button class="ib" onclick="openAllocModal(2)"><i class="ti ti-edit"></i></button></div><div style="height:4px;background:var(--bg);border-radius:4px;overflow:hidden;width:100%;border:1px solid var(--bdr)"><div style="height:100%;width:52%;background:var(--teal);border-radius:4px"></div></div><div style="font-size:10px;color:var(--txt2)">יתרה: ₪2,400</div></div><div class="row" style="flex-direction:column;align-items:flex-start;gap:4px"><div style="display:flex;align-items:center;gap:7px;width:100%"><span style="flex:1;font-size:12px;font-weight:600">קמפינג בריכה</span><span style="font-size:11px;color:var(--txt2)">₪730 / ₪1,800</span><button class="ib" onclick="openAllocModal(3)"><i class="ti ti-edit"></i></button></div><div style="height:4px;background:var(--bg);border-radius:4px;overflow:hidden;width:100%;border:1px solid var(--bdr)"><div style="height:100%;width:41%;background:var(--teal);border-radius:4px"></div></div><div style="font-size:10px;color:var(--txt2)">יתרה: ₪1,070</div></div><div class="row" style="flex-direction:column;align-items:flex-start;gap:4px"><div style="display:flex;align-items:center;gap:7px;width:100%"><span style="flex:1;font-size:12px;font-weight:600">מירוץ המעפיל</span><span style="font-size:11px;color:var(--txt2)">₪750 / ₪3,000</span><button class="ib" onclick="openAllocModal(4)"><i class="ti ti-edit"></i></button></div><div style="height:4px;background:var(--bg);border-radius:4px;overflow:hidden;width:100%;border:1px solid var(--bdr)"><div style="height:100%;width:25%;background:var(--teal);border-radius:4px"></div></div><div style="font-size:10px;color:var(--txt2)">יתרה: ₪2,250</div></div><div class="row" style="background:var(--tl);border-radius:var(--rm);padding:8px 10px;margin-top:4px"><span style="flex:1;font-size:12px;font-weight:600;color:var(--tt)">רזרבה (לא מוקצה)</span><span style="font-size:13px;font-weight:700;color:var(--tt)">₪10,700</span></div></div></div>
 </div>
 
 <!-- GLOBAL EQUIP -->
@@ -446,7 +453,7 @@ textarea{resize:vertical}
 </div>
 
 <!-- SETTINGS -->
-<div class="pg" id="pg-settings">
+<div class="pg active" id="pg-settings">
   <div class="sh"><span class="sh-t">הגדרות</span></div>
   <div class="card" style="background:var(--tl);border-color:var(--teal)">
     <div style="display:flex;align-items:center;gap:8px;justify-content:space-between">
@@ -454,20 +461,32 @@ textarea{resize:vertical}
       <button class="btn bsm bd" onclick="resetData()" style="white-space:nowrap;flex-shrink:0"><i class="ti ti-refresh"></i> איפוס</button>
     </div>
   </div>
+
+  <div class="card" style="border:2px solid #2F81F7;background:#F0F7FF">
+    <div style="font-size:12px;font-weight:700;color:#1565C0;margin-bottom:6px;display:flex;align-items:center;gap:6px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="#1565C0"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"></path></svg>
+      עדכון GitHub Pages
+    </div>
+    <div style="font-size:11px;color:#1565C0;margin-bottom:10px">הורד את הקובץ המעודכן בשם <strong>index.html</strong> והעלה ל-GitHub</div>
+    <button class="btn" style="width:100%;justify-content:center;background:#2F81F7;color:#fff;border-color:#2F81F7;font-weight:600" onclick="exportForGitHub()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff" style="margin-left:6px"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"></path></svg>
+      הורד index.html לעדכון GitHub
+    </button>
+  </div>
   <div class="card">
     <div class="ssect">קיבוצים במערכת</div>
     <div style="font-size:11px;color:var(--txt2);margin-bottom:8px">הקיבוץ הראשון הוא ברירת המחדל</div>
-    <div id="kibbutz-list"></div>
+    <div id="kibbutz-list"><div class="litem"><span>קיבוץ המעפיל <span style="font-size:10px;color:var(--tt)">(ברירת מחדל)</span> </span><button class="ib del" onclick="rmKb(0)"><i class="ti ti-trash"></i></button></div><div class="litem"><span>עין החורש </span><button class="ib del" onclick="rmKb(1)"><i class="ti ti-trash"></i></button></div><div class="litem"><span>גבעת חיים איחוד </span><button class="ib del" onclick="rmKb(2)"><i class="ti ti-trash"></i></button></div><div class="litem"><span>גבעת חיים מאוחד </span><button class="ib del" onclick="rmKb(3)"><i class="ti ti-trash"></i></button></div><div class="litem"><span>מגל </span><button class="ib del" onclick="rmKb(4)"><i class="ti ti-trash"></i></button></div></div>
     <div style="display:flex;gap:6px;margin-top:9px"><input type="text" id="new-kb" placeholder="שם קיבוץ חדש..."><button class="btn bsm bp" onclick="addKb()"><i class="ti ti-plus"></i></button></div>
   </div>
   <div class="card">
     <div class="ssect">תפקידי מתנדבים</div>
-    <div id="roles-list"></div>
+    <div id="roles-list"><div class="litem"><span>הקמה</span><button class="ib del" onclick="rmRole(0)"><i class="ti ti-trash"></i></button></div><div class="litem"><span>פירוק</span><button class="ib del" onclick="rmRole(1)"><i class="ti ti-trash"></i></button></div><div class="litem"><span>כיבוד</span><button class="ib del" onclick="rmRole(2)"><i class="ti ti-trash"></i></button></div><div class="litem"><span>אחראי טקס</span><button class="ib del" onclick="rmRole(3)"><i class="ti ti-trash"></i></button></div><div class="litem"><span>ריקוד זוגות</span><button class="ib del" onclick="rmRole(4)"><i class="ti ti-trash"></i></button></div><div class="litem"><span>ריקוד אמהות תינוקות</span><button class="ib del" onclick="rmRole(5)"><i class="ti ti-trash"></i></button></div><div class="litem"><span>ריקוד נשים</span><button class="ib del" onclick="rmRole(6)"><i class="ti ti-trash"></i></button></div><div class="litem"><span>תפאורה</span><button class="ib del" onclick="rmRole(7)"><i class="ti ti-trash"></i></button></div><div class="litem"><span>תלבושות</span><button class="ib del" onclick="rmRole(8)"><i class="ti ti-trash"></i></button></div><div class="litem"><span>הגשה בעמדת אוכל</span><button class="ib del" onclick="rmRole(9)"><i class="ti ti-trash"></i></button></div></div>
     <div style="display:flex;gap:6px;margin-top:9px"><input type="text" id="new-role" placeholder="תפקיד חדש..." onkeydown="if(event.key==='Enter')addRole()"><button class="btn bsm bp" onclick="addRole()"><i class="ti ti-plus"></i></button></div>
   </div>
   <div class="card">
     <div class="ssect">קטגוריות משימות</div>
-    <div id="taskcat-list"></div>
+    <div id="taskcat-list"><div class="litem"><span>לוגיסטיקה</span><button class="ib del" onclick="rmTaskCat(0)"><i class="ti ti-trash"></i></button></div><div class="litem"><span>תוכן</span><button class="ib del" onclick="rmTaskCat(1)"><i class="ti ti-trash"></i></button></div><div class="litem"><span>פרסום</span><button class="ib del" onclick="rmTaskCat(2)"><i class="ti ti-trash"></i></button></div><div class="litem"><span>כללי</span><button class="ib del" onclick="rmTaskCat(3)"><i class="ti ti-trash"></i></button></div><div class="litem"><span>דחוף</span><button class="ib del" onclick="rmTaskCat(4)"><i class="ti ti-trash"></i></button></div><div class="litem"><span>שוטף</span><button class="ib del" onclick="rmTaskCat(5)"><i class="ti ti-trash"></i></button></div><div class="litem"><span>מנהלי</span><button class="ib del" onclick="rmTaskCat(6)"><i class="ti ti-trash"></i></button></div></div>
     <div style="display:flex;gap:6px;margin-top:9px"><input type="text" id="new-taskcat" placeholder="קטגוריה חדשה..." onkeydown="if(event.key==='Enter')addTaskCat()"><button class="btn bsm bp" onclick="addTaskCat()"><i class="ti ti-plus"></i></button></div>
   </div>
   <div class="card">
@@ -493,7 +512,7 @@ textarea{resize:vertical}
     <span class="mtt" id="em-name"></span>
     <div style="display:flex;gap:5px;align-items:center">
       <button class="btn bsm" onclick="openEditEvt()"><i class="ti ti-edit"></i> ערוך</button>
-      <button class="btn bsm" onclick="addToGoogleCalendar()" title="הוסף ליומן Google" style="color:#4285F4;border-color:#4285F4;background:#EAF0FF"><svg width="13" height="13" viewBox="0 0 48 48" style="flex-shrink:0"><path fill="#4285F4" d="M44 24c0-1.2-.1-2.4-.3-3.5H24v6.6h11.3c-.5 2.6-2 4.8-4.2 6.2v5.2h6.7C41.3 35.1 44 30 44 24z"/><path fill="#34A853" d="M24 44c5.6 0 10.3-1.8 13.7-5l-6.7-5.2c-1.9 1.3-4.3 2-7 2-5.4 0-10-3.6-11.6-8.5H5.5v5.4C8.9 39.9 16 44 24 44z"/><path fill="#FBBC05" d="M12.4 27.3c-.4-1.3-.7-2.6-.7-4s.3-2.7.7-4v-5.4H5.5C4 17.1 3 20.4 3 24s1 6.9 2.5 10.1l6.9-5.4v-1.4z"/><path fill="#EA4335" d="M24 10.8c3 0 5.7 1 7.8 3l5.8-5.8C34.3 4.8 29.5 3 24 3 16 3 8.9 7.1 5.5 13.9l6.9 5.4C14 14.4 18.6 10.8 24 10.8z"/></svg> יומן</button>
+      <button class="btn bsm" onclick="addToGoogleCalendar()" title="הוסף ליומן Google" style="color:#4285F4;border-color:#4285F4;background:#EAF0FF"><svg width="13" height="13" viewBox="0 0 48 48" style="flex-shrink:0"><path fill="#4285F4" d="M44 24c0-1.2-.1-2.4-.3-3.5H24v6.6h11.3c-.5 2.6-2 4.8-4.2 6.2v5.2h6.7C41.3 35.1 44 30 44 24z"></path><path fill="#34A853" d="M24 44c5.6 0 10.3-1.8 13.7-5l-6.7-5.2c-1.9 1.3-4.3 2-7 2-5.4 0-10-3.6-11.6-8.5H5.5v5.4C8.9 39.9 16 44 24 44z"></path><path fill="#FBBC05" d="M12.4 27.3c-.4-1.3-.7-2.6-.7-4s.3-2.7.7-4v-5.4H5.5C4 17.1 3 20.4 3 24s1 6.9 2.5 10.1l6.9-5.4v-1.4z"></path><path fill="#EA4335" d="M24 10.8c3 0 5.7 1 7.8 3l5.8-5.8C34.3 4.8 29.5 3 24 3 16 3 8.9 7.1 5.5 13.9l6.9 5.4C14 14.4 18.6 10.8 24 10.8z"></path></svg> יומן</button>
       <button class="btn bsm" onclick="exportEventReport()" title="הפק דוח"><i class="ti ti-file-report"></i> דוח</button>
       <button class="xb" onclick="closeO('ovl-evt');rEvts('dash');rEvts('events')">×</button>
     </div>
@@ -542,7 +561,7 @@ textarea{resize:vertical}
     <div class="shr-box">
       <div style="font-size:12px;font-weight:600;color:var(--pt);display:flex;align-items:center;gap:5px"><i class="ti ti-link"></i> קישור שריון מתנדבים</div>
       <div class="shr-lnk">
-        <input type="text" id="shr-url" readonly>
+        <input type="text" id="shr-url" readonly="">
         <button class="btn bsm" onclick="cpL()"><i class="ti ti-copy"></i> העתק</button>
         <button class="btn bsm bp" id="shr-preview-link" style="min-height:36px"><i class="ti ti-eye"></i> תצוגה</button>
       </div>
@@ -728,7 +747,7 @@ textarea{resize:vertical}
 <div class="mod" style="max-width:380px">
   <div class="mhd"><span class="mtt">משימה אישית חדשה</span><button class="xb" onclick="closeO('ovl-amt')">×</button></div>
   <div class="frow"><label class="fl">תיאור</label><input type="text" id="amt-t"></div>
-  <div class="frow"><label class="fl">קטגוריה</label><select id="amt-c"></select></div>
+  <div class="frow"><label class="fl">קטגוריה</label><select id="amt-c"><option selected="">לוגיסטיקה</option><option>תוכן</option><option>פרסום</option><option>כללי</option><option>דחוף</option><option>שוטף</option><option>מנהלי</option></select></div>
   <div class="frow"><label class="fl">תאריך יעד (אופציונלי)</label><input type="date" id="amt-due"></div>
   <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:8px">
     <button class="btn" onclick="closeO('ovl-amt')">ביטול</button>
@@ -851,7 +870,7 @@ textarea{resize:vertical}
     <button class="ai-chip" onclick="askAI('מי המתנדבים הפעילים ביותר?')">מתנדבים פעילים</button>
   </div>
   <div style="padding:10px 14px 14px;border-top:1px solid var(--bdr);display:flex;gap:8px;flex-shrink:0">
-    <input type="text" id="ai-input" placeholder="שאלי אותי כל דבר..." style="flex:1;font-size:13px" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAI()}">
+    <input type="text" id="ai-input" placeholder="שאלי אותי כל דבר..." style="flex:1;font-size:13px" onkeydown="if(event.key==='Enter'&amp;&amp;!event.shiftKey){event.preventDefault();sendAI()}">
     <button onclick="sendAI()" style="background:var(--td);color:#fff;border:none;border-radius:var(--rm);padding:8px 14px;cursor:pointer;font-size:13px;font-family:inherit;display:flex;align-items:center;gap:5px;flex-shrink:0"><i class="ti ti-send"></i></button>
   </div>
 </div>
@@ -900,7 +919,7 @@ textarea{resize:vertical}
           </div>
         </div>
         <div id="vp-err" style="display:none;margin-top:10px"></div>
-        <button id="vp-submit-btn" class="btn bp" style="width:100%;justify-content:center;margin-top:14px;padding:10px" onclick="this.classList.add('heart-pop');setTimeout(()=>this.classList.remove('heart-pop'),400);submitVolReg()"><i class="ti ti-heart"></i> אני מתנדב/ת!</button>
+        <button id="vp-submit-btn" class="btn bp" style="width:100%;justify-content:center;margin-top:14px;padding:10px" onclick="this.classList.add('heart-pop');setTimeout(()=&gt;this.classList.remove('heart-pop'),400);submitVolReg()"><i class="ti ti-heart"></i> אני מתנדב/ת!</button>
       </div>
       <div style="text-align:center;font-size:11px;color:var(--txt2);margin-top:12px">מערכת ניהול תרבות קיבוצית</div>
     </div>
@@ -1104,23 +1123,109 @@ function totalMissing(){
   }).reduce((s,e)=>s+getMissingRoles(e).reduce((ss,m)=>ss+m.need,0),0);
 }
 
-function saveAll(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify({kibbutzim,roles,taskCats,kbData,CKB,nxt,_v:DATA_VERSION}));}catch(e){}}
+// ── FIREBASE ──
+var firebaseConfig={
+  apiKey:"AIzaSyCZkJigKstL1NZHHJ0NqbtR3yLImOUIybs",
+  authDomain:"kibbutz-culture.firebaseapp.com",
+  databaseURL:"https://kibbutz-culture-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"kibbutz-culture",
+  storageBucket:"kibbutz-culture.firebasestorage.app",
+  messagingSenderId:"1096754081912",
+  appId:"1:1096754081912:web:883baf443c9c542217bd8d"
+};
+firebase.initializeApp(firebaseConfig);
+var db=firebase.database();
+var DB_PATH='kibbutz/main';
+var _saving=false;
+
+function saveAll(){
+  if(_saving)return;
+  _saving=true;
+  db.ref(DB_PATH).set({kibbutzim,roles,taskCats,kbData,CKB,nxt})
+    .then(()=>{_saving=false;})
+    .catch(e=>{_saving=false;console.warn('Firebase save error:',e);
+      // fallback to localStorage
+      try{localStorage.setItem(STORAGE_KEY,JSON.stringify({kibbutzim,roles,taskCats,kbData,CKB,nxt,_v:DATA_VERSION}));}catch(ex){}
+    });
+}
+
 function loadAll(){
+  // sync load from localStorage as fallback
   try{
     var raw=localStorage.getItem(STORAGE_KEY);
-    if(!raw)return false;
-    var s=JSON.parse(raw);
-    if(!s._v||s._v<DATA_VERSION){localStorage.removeItem(STORAGE_KEY);return false;}
-    if(s.kibbutzim)kibbutzim=s.kibbutzim;
-    if(s.roles)roles=s.roles;
-    if(s.taskCats)taskCats=s.taskCats;
-    if(s.kbData)kbData=s.kbData;
-    if(s.CKB)CKB=s.CKB;
-    if(s.nxt)nxt=s.nxt;
-    return true;
-  }catch(e){localStorage.removeItem(STORAGE_KEY);return false;}
+    if(raw){var s=JSON.parse(raw);
+      if(s._v&&s._v>=DATA_VERSION){
+        if(s.kibbutzim)kibbutzim=s.kibbutzim;if(s.roles)roles=s.roles;
+        if(s.taskCats)taskCats=s.taskCats;if(s.kbData)kbData=s.kbData;
+        if(s.CKB)CKB=s.CKB;if(s.nxt)nxt=s.nxt;
+      }
+    }
+  }catch(e){}
+  return false; // always re-fetch from Firebase in initApp
 }
-function resetData(){if(!confirm('למחוק את כל הנתונים?'))return;localStorage.removeItem(STORAGE_KEY);location.reload();}
+
+function initApp(){
+  showLoading(true);
+  db.ref(DB_PATH).once('value').then(snap=>{
+    var d=snap.val();
+    if(d){
+      if(d.kibbutzim)kibbutzim=d.kibbutzim;
+      if(d.roles)roles=d.roles;
+      if(d.taskCats)taskCats=d.taskCats;
+      if(d.kbData)kbData=d.kbData;
+      if(d.CKB)CKB=d.CKB;
+      if(d.nxt)nxt=d.nxt;
+    }
+    showLoading(false);
+    bootApp();
+  }).catch(e=>{
+    console.warn('Firebase load error – using defaults:',e);
+    showLoading(false);
+    bootApp();
+  });
+
+  // realtime sync
+  db.ref(DB_PATH).on('value',snap=>{
+    var d=snap.val();if(!d)return;
+    if(d.kibbutzim)kibbutzim=d.kibbutzim;
+    if(d.roles)roles=d.roles;
+    if(d.taskCats)taskCats=d.taskCats;
+    if(d.kbData)kbData=d.kbData;
+    if(d.CKB)CKB=d.CKB;
+    if(d.nxt)nxt=d.nxt;
+    if(document.readyState==='complete') refreshAll();
+  });
+}
+
+function showLoading(on){
+  var el=$$('fb-loading');
+  if(el)el.style.display=on?'flex':'none';
+}
+
+function bootApp(){
+  buildKbSelect();
+  loadReminderSettings();
+  loadWAGroups();
+  buildMTTabs();
+  rMT();rGB();updateDash();rDashNext();
+}
+
+function resetData(){
+  if(!confirm('למחוק את כל הנתונים מהענן?'))return;
+  db.ref(DB_PATH).remove().then(()=>location.reload());
+}
+function exportForGitHub(){
+  // get current page HTML
+  var html=document.documentElement.outerHTML;
+  var blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='index.html';
+  a.click();
+  setTimeout(()=>{
+    alert('✅ הקובץ הורד!\n\nכעת:\n1. כנסי ל-GitHub → kibbutz-culture\n2. לחצי "Add file" → "Upload files"\n3. גרורי את index.html\n4. לחצי "Commit changes"\n\nהאתר יתעדכן תוך ~דקה 🚀');
+  },500);
+}
 
 function buildKbSelect(){$$('kb-select').innerHTML=kibbutzim.map(k=>'<option value="'+k.id+'"'+(k.id===CKB?' selected':'')+'>'+k.name+'</option>').join('');}
 function switchKb(id){CKB=id;buildKbSelect();refreshAll();closeO('ovl-evt');saveAll();}
@@ -2696,25 +2801,24 @@ document.addEventListener('DOMContentLoaded',function(){
     var _raw=localStorage.getItem(STORAGE_KEY);
     if(_raw){var _s=JSON.parse(_raw);if(!_s._v||_s._v<DATA_VERSION){localStorage.removeItem(STORAGE_KEY);}}
   }catch(e){localStorage.removeItem(STORAGE_KEY);}
-  loadAll();
   var p=new URLSearchParams(window.location.search);
   if(p.get('mode')==='vol'){
-    document.body.classList.add('vol-mode');var kbId=p.get('kb');var evtId=p.get('evt');
-    if(kbId&&evtId!==null){
-      showVolPage(kbId,parseInt(evtId));
-      $$('vol-back-btn').style.display='none'; // hide back btn for real volunteers
-    }
+    document.body.classList.add('vol-mode');
+    showLoading(false);
+    var kbId=p.get('kb');var evtId=p.get('evt');
+    // טעינה מ-Firebase לדף הגיוס
+    db.ref(DB_PATH).once('value').then(snap=>{
+      var d=snap.val();if(d){
+        if(d.kibbutzim)kibbutzim=d.kibbutzim;if(d.roles)roles=d.roles;
+        if(d.taskCats)taskCats=d.taskCats;if(d.kbData)kbData=d.kbData;
+        if(d.CKB)CKB=d.CKB;if(d.nxt)nxt=d.nxt;
+      }
+      if(kbId&&evtId!==null){showVolPage(kbId,parseInt(evtId));$$('vol-back-btn').style.display='none';}
+    });
   } else {
-    buildKbSelect();
-    loadReminderSettings();
-    loadWAGroups();
-    buildMTTabs();
-    rMT();
-    rGB();
-    updateDash();
-    rDashNext();
+    initApp();
   }
 });
 </script>
-</body>
-</html>
+
+</body></html>
