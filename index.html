@@ -489,15 +489,32 @@ if(new URLSearchParams(window.location.search).get('mode')==='vol'){
 <!-- MY TASKS -->
 <div class="pg" id="pg-mytasks">
   <div class="sh"><span class="sh-t">משימות רכזת</span></div>
-  <div class="tabs" id="mt-cat-tabs"><span class="tab active" onclick="filterMT('all',this)">הכל</span></div>
-  <div class="card">
+
+  <!-- משימות אישיות -->
+  <div class="card" style="margin-bottom:12px">
+    <div style="font-size:12px;font-weight:600;color:var(--txt2);margin-bottom:8px">משימות כלליות</div>
+    <div class="tabs" id="mt-cat-tabs" style="margin-bottom:8px">
+      <span class="tab active" onclick="filterMT('all',this)">הכל</span>
+      <span class="tab" onclick="filterMT('דחוף',this)">דחוף</span>
+      <span class="tab" onclick="filterMT('פרסום',this)">פרסום</span>
+      <span class="tab" onclick="filterMT('מנהלי',this)">מנהלי</span>
+      <span class="tab" onclick="filterMT('כללי',this)">כללי</span>
+    </div>
     <div id="mt-list"></div>
     <div style="display:flex;gap:6px;margin-top:9px">
       <input type="text" id="qt-my" placeholder="הוסף משימה מהירה...">
-      <select id="qt-cat" style="width:auto;min-width:90px"></select>
+      <select id="qt-cat" style="width:auto;min-width:90px">
+        <option value="כללי">כללי</option>
+        <option value="דחוף">דחוף</option>
+        <option value="פרסום">פרסום</option>
+        <option value="מנהלי">מנהלי</option>
+      </select>
       <button class="btn bsm bp" onclick="qMT()"><i class="ti ti-plus"></i></button>
     </div>
   </div>
+
+  <!-- משימות תחת אירועים -->
+  <div id="mt-events-tasks"></div>
 </div>
 
 <!-- GLOBAL BUDGET -->
@@ -845,14 +862,15 @@ if(new URLSearchParams(window.location.search).get('mode')==='vol'){
 <!-- ADD EVT TASK -->
 <div class="ovl" id="ovl-aet">
 <div class="mod">
-  <div class="mhd"><span class="mtt">הוספת משימה לאירוע</span><button class="xb" onclick="closeO('ovl-aet')">×</button></div>
+  <div class="mhd"><span class="mtt" id="aet-title">הוספת משימה לאירוע</span><button class="xb" onclick="closeO('ovl-aet')">×</button></div>
   <div class="frow"><label class="fl">תיאור המשימה</label><input type="text" id="aet-t"></div>
   <div class="frow"><label class="fl">קטגוריה</label><select id="aet-c"></select></div>
   <div class="frow"><label class="fl">אחראי/ת (אופציונלי)</label><select id="aet-v"><option value="">-- ללא שיבוץ --</option></select></div>
   <div class="frow"><label class="fl">תאריך יעד (אופציונלי)</label><input type="date" id="aet-due"></div>
   <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:8px">
+    <button class="btn bd bsm" id="aet-del-btn" style="display:none;margin-left:auto" onclick="deleteAET()"><i class="ti ti-trash"></i></button>
     <button class="btn" onclick="closeO('ovl-aet')">ביטול</button>
-    <button class="btn bp" onclick="saveAET()"><i class="ti ti-check"></i> הוסף</button>
+    <button class="btn bp" id="aet-save-btn" onclick="saveAET()"><i class="ti ti-check"></i> שמור</button>
   </div>
 </div>
 </div>
@@ -860,13 +878,21 @@ if(new URLSearchParams(window.location.search).get('mode')==='vol'){
 <!-- ADD MY TASK -->
 <div class="ovl" id="ovl-amt">
 <div class="mod" style="max-width:380px">
-  <div class="mhd"><span class="mtt">משימה אישית חדשה</span><button class="xb" onclick="closeO('ovl-amt')">×</button></div>
+  <div class="mhd"><span class="mtt" id="amt-title">משימה חדשה</span><button class="xb" onclick="closeO('ovl-amt')">×</button></div>
   <div class="frow"><label class="fl">תיאור</label><input type="text" id="amt-t"></div>
-  <div class="frow"><label class="fl">קטגוריה</label><select id="amt-c"></select></div>
+  <div class="frow"><label class="fl">קטגוריה</label>
+    <select id="amt-c">
+      <option value="כללי">כללי</option>
+      <option value="דחוף">דחוף</option>
+      <option value="פרסום">פרסום</option>
+      <option value="מנהלי">מנהלי</option>
+    </select>
+  </div>
   <div class="frow"><label class="fl">תאריך יעד (אופציונלי)</label><input type="date" id="amt-due"></div>
   <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:8px">
+    <button class="btn bd bsm" id="amt-del-btn" style="display:none;margin-left:auto" onclick="deleteAMT()"><i class="ti ti-trash"></i></button>
     <button class="btn" onclick="closeO('ovl-amt')">ביטול</button>
-    <button class="btn bp" onclick="saveAMT()"><i class="ti ti-check"></i> הוסף</button>
+    <button class="btn bp" id="amt-save-btn" onclick="saveAMT()"><i class="ti ti-check"></i> שמור</button>
   </div>
 </div>
 </div>
@@ -2188,18 +2214,46 @@ function rET(){
     return '<div class="row"><input type="checkbox" class="chk"'+(tk.d?' checked':'')+' onchange="togET('+i+',this.checked)">'
       +'<div style="flex:1;min-width:0"><span style="font-size:12px'+(tk.d?';text-decoration:line-through;opacity:.55':'')+'">'+tk.t+'</span>'+vname+'</div>'
       +'<span class="tag '+ccat(tk.c)+'" style="font-size:10px">'+tk.c+'</span>'
-      +'<button class="ib del" onclick="rmET('+i+')"><i class="ti ti-trash" style="font-size:12px"></i></button></div>';
+      +'<button class="ib" onclick="openAETEdit('+i+')"><i class="ti ti-edit" style="font-size:12px"></i></button>'+'<button class="ib del" onclick="rmET('+i+')"><i class="ti ti-trash" style="font-size:12px"></i></button></div>';
   }).join('');
   $$('et-task-list').innerHTML=h||'<div style="font-size:12px;color:var(--txt2);padding:6px 0;text-align:center">אין משימות</div>';
 }
 function togET(i,v){var e=GE();if(!e)return;e.tasks[i].d=v;rET();rEV();saveAll();}
 function rmET(i){var e=GE();if(!e)return;e.tasks.splice(i,1);rET();saveAll();}
 function openAddEvtTask(){
+  _editAETIdx=null;
+  $$('aet-title').textContent='הוספת משימה לאירוע';
   $$('aet-t').value='';$$('aet-c').innerHTML=mkCats('כללי');
   $$('aet-v').innerHTML='<option value="">-- ללא שיבוץ --</option>'+D().vols.map(v=>'<option value="'+v.id+'">'+v.n+'</option>').join('');
+  $$('aet-due').value='';$$('aet-del-btn').style.display='none';
   openO('ovl-aet');
 }
-function saveAET(){var e=GE();if(!e)return;var t=$$('aet-t').value.trim();if(!t)return;var vid=$$('aet-v').value;var due=$$('aet-due').value||null;e.tasks.push({t,c:$$('aet-c').value,d:false,vid:vid===''?null:parseInt(vid),due});closeO('ovl-aet');rET();rEV();saveAll();}
+var _editAETIdx=null;
+function openAETEdit(i){
+  var e=GE();if(!e)return;var t=e.tasks[i];
+  _editAETIdx=i;
+  $$('aet-title').textContent='עריכת משימה';
+  $$('aet-t').value=t.t;
+  $$('aet-c').value=t.c;
+  $$('aet-v').value=t.vid===null||t.vid===undefined?'':t.vid;
+  $$('aet-due').value=t.due||'';
+  $$('aet-del-btn').style.display='flex';
+  $$('aet-save-btn').innerHTML='<i class="ti ti-check"></i> שמור';
+  openO('ovl-aet');
+}
+function deleteAET(){
+  var e=GE();if(!e||_editAETIdx===null)return;
+  e.tasks.splice(_editAETIdx,1);closeO('ovl-aet');rET();rEV();saveAll();
+}
+function saveAET(){
+  var e=GE();if(!e)return;
+  var t=$$('aet-t').value.trim();if(!t)return;
+  var vid=$$('aet-v').value;var due=$$('aet-due').value||null;
+  var obj={t,c:$$('aet-c').value,d:false,vid:vid===''?null:parseInt(vid),due};
+  if(_editAETIdx!==null){obj.d=e.tasks[_editAETIdx].d;e.tasks[_editAETIdx]=obj;}
+  else e.tasks.push(obj);
+  closeO('ovl-aet');rET();rEV();saveAll();
+}
 
 function rEB(){
   var e=GE();if(!e)return;var total=0;
@@ -2704,6 +2758,44 @@ function buildMTTabs(){
   $$('mt-cat-tabs').innerHTML=tabs;
   if(cats.length){$$('qt-cat').innerHTML=mkCats(cats[0]);$$('amt-c')&&($$('amt-c').innerHTML=mkCats(cats[0]));}
 }
+function rMTEvents(){
+  var el=$$('mt-events-tasks');if(!el)return;
+  var events=D().events.filter(e=>calcStatus(e)!=='done'&&e.tasks&&e.tasks.filter(t=>!t.d).length>0);
+  if(!events.length){el.innerHTML='';return;}
+  var today=new Date();today.setHours(0,0,0,0);
+  el.innerHTML=events.map(e=>{
+    var openTasks=e.tasks.filter(t=>!t.d);
+    var rows=openTasks.map((t,i)=>{
+      var ti=e.tasks.indexOf(t);
+      var isOverdue=t.due&&new Date(t.due)<today;
+      return '<div class="row" style="padding:6px 0">'
+        +'<input type="checkbox" class="chk" onchange="togEvtTaskFromMT('+e.id+','+ti+',this.checked)">'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:12px">'+t.t+'</div>'
+        +(t.due?'<div style="font-size:10px;color:'+(isOverdue?'var(--ct)':'var(--txt2)')+'">📅 '+new Date(t.due).toLocaleDateString('he-IL',{day:'numeric',month:'short'})+(isOverdue?' – פג!':'')+'</div>':'')
+        +'</div>'
+        +'<span class="tag '+ccat(t.c)+'" style="font-size:10px">'+t.c+'</span>'
+        +'<button class="ib" onclick="openEvtTaskEdit('+e.id+','+ti+')"><i class="ti ti-edit" style="font-size:12px"></i></button>'
+        +'</div>';
+    }).join('');
+    return '<div class="card" style="margin-bottom:10px">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+      +'<div style="font-size:12px;font-weight:600">'+e.name+'</div>'
+      +'<span style="font-size:10px;color:var(--txt2)">'+e.day+' '+e.month+'</span>'
+      +'</div>'+rows+'</div>';
+  }).join('');
+}
+
+function togEvtTaskFromMT(evtId,ti,val){
+  var e=D().events.find(x=>x.id===evtId);if(!e)return;
+  e.tasks[ti].d=val;rMTEvents();rDashNext();saveAll();
+}
+
+function openEvtTaskEdit(evtId,ti){
+  CE=evtId;
+  openAETEdit(ti);
+}
+
 function rMT(){
   var ts=D().myTasks||[];var f=mtF==='all'?ts:ts.filter(t=>t.c===mtF);
   if(!f.length){$$('mt-list').innerHTML='<div style="font-size:12px;color:var(--txt2);text-align:center;padding:16px">אין משימות בקטגוריה זו</div>';return;}
@@ -2716,8 +2808,9 @@ function rMT(){
       +(dueLabel?'<div>'+dueLabel+'</div>':'')
       +'</div>'
       +'<span class="tag '+ccat(t.c)+'" style="font-size:10px">'+t.c+'</span>'
-      +'<button class="ib del" onclick="rmMT('+ri+',this)"><i class="ti ti-trash" style="font-size:12px"></i></button></div>';
+      +'<button class="ib" onclick="openAMT('+ri+')"><i class="ti ti-edit" style="font-size:12px"></i></button>'+'<button class="ib del" onclick="rmMT('+ri+',this)"><i class="ti ti-trash" style="font-size:12px"></i></button></div>';
   }).join('');
+  rMTEvents();
 }
 function togMT(i,v){D().myTasks[i].d=v;rMT();rDashNext();saveAll();}
 function rmMT(i,el){
@@ -2727,7 +2820,33 @@ function rmMT(i,el){
 }
 function qMT(){var inp=$$('qt-my');var txt=inp.value.trim();if(!txt)return;D().myTasks.push({t:txt,c:$$('qt-cat').value||taskCats[0]||'כללי',d:false});inp.value='';rMT();saveAll();}
 function filterMT(c,el){mtF=c;document.querySelectorAll('#mt-cat-tabs .tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');rMT();}
-function saveAMT(){var t=$$('amt-t').value.trim();if(!t)return;var due=$$('amt-due').value||null;D().myTasks.push({t,c:$$('amt-c').value,d:false,due});closeO('ovl-amt');rMT();saveAll();}
+var _editAMTIdx=null;
+function openAMT(idx){
+  _editAMTIdx=idx;
+  if(idx!==null){
+    var t=D().myTasks[idx];
+    $$('amt-title').textContent='עריכת משימה';
+    $$('amt-t').value=t.t;$$('amt-c').value=t.c;$$('amt-due').value=t.due||'';
+    $$('amt-del-btn').style.display='flex';
+  } else {
+    $$('amt-title').textContent='משימה חדשה';
+    $$('amt-t').value='';$$('amt-c').value='כללי';$$('amt-due').value='';
+    $$('amt-del-btn').style.display='none';
+  }
+  openAMT(null);
+}
+function deleteAMT(){
+  if(_editAMTIdx===null)return;
+  D().myTasks.splice(_editAMTIdx,1);closeO('ovl-amt');rMT();rDashNext();saveAll();
+}
+function saveAMT(){
+  var t=$$('amt-t').value.trim();if(!t)return;
+  var due=$$('amt-due').value||null;
+  var obj={t,c:$$('amt-c').value,d:false,due};
+  if(_editAMTIdx!==null){obj.d=D().myTasks[_editAMTIdx].d;D().myTasks[_editAMTIdx]=obj;}
+  else D().myTasks.push(obj);
+  closeO('ovl-amt');rMT();rDashNext();saveAll();
+}
 
 function rGB(){
   var d=D();var alloc=totalAlloc();var tot=d.annualBudget;
