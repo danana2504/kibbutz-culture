@@ -2226,11 +2226,18 @@ function rET(){
 }
 function togET(i,v){var e=GE();if(!e)return;e.tasks[i].d=v;rET();rEV();saveAll();}
 function rmET(i){var e=GE();if(!e)return;e.tasks.splice(i,1);rET();saveAll();}
+var EVT_TASK_CATS=['לוגיסטיקה','תוכן','פרסום','כללי'];
+
+function mkEvtTaskCats(sel){
+  return EVT_TASK_CATS.map(c=>'<option value="'+c+'"'+(c===sel?' selected':'')+'>'+c+'</option>').join('');
+}
+
 function openAddEvtTask(){
   _editAETIdx=null;
   $$('aet-title').textContent='הוספת משימה לאירוע';
-  $$('aet-t').value='';$$('aet-c').innerHTML=mkCats('כללי');
-  $$('aet-v').innerHTML='<option value="">-- ללא שיבוץ --</option>'+D().vols.map(v=>'<option value="'+v.id+'">'+v.n+'</option>').join('');
+  $$('aet-t').value='';
+  $$('aet-c').innerHTML=mkEvtTaskCats('לוגיסטיקה');
+  $$('aet-v').innerHTML='<option value="">-- ללא שיבוץ --</option>'+(D().vols||[]).map(v=>'<option value="'+v.id+'">'+v.n+'</option>').join('');
   $$('aet-due').value='';$$('aet-del-btn').style.display='none';
   openO('ovl-aet');
 }
@@ -2240,8 +2247,8 @@ function openAETEdit(i){
   _editAETIdx=i;
   $$('aet-title').textContent='עריכת משימה';
   $$('aet-t').value=t.t;
-  $$('aet-c').value=t.c;
-  $$('aet-v').value=t.vid===null||t.vid===undefined?'':t.vid;
+  $$('aet-c').innerHTML=mkEvtTaskCats(t.c);
+  $$('aet-v').innerHTML='<option value="">-- ללא שיבוץ --</option>'+(GE()&&D().vols||[]).map(v=>'<option value="'+v.id+'"'+(t.vid===v.id?' selected':'')+'>'+v.n+'</option>').join('');
   $$('aet-due').value=t.due||'';
   $$('aet-del-btn').style.display='flex';
   $$('aet-save-btn').innerHTML='<i class="ti ti-check"></i> שמור';
