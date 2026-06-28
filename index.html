@@ -514,7 +514,13 @@ if(new URLSearchParams(window.location.search).get('mode')==='vol'){
   </div>
 
   <!-- משימות תחת אירועים -->
-  <div id="mt-events-tasks"></div>
+  <div id="mt-events-tasks">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="font-size:12px;font-weight:600;color:var(--txt2)">משימות לפי אירוע</div>
+      <button class="btn bsm bp" onclick="openAddEvtTaskFromMT()"><i class="ti ti-plus"></i> הוסף משימה לאירוע</button>
+    </div>
+    <div id="mt-events-tasks-list"></div>
+  </div>
 </div>
 
 <!-- GLOBAL BUDGET -->
@@ -2756,14 +2762,34 @@ function buildMTTabs(){
   var catOpts=MT_CATS.map(c=>'<option value="'+c+'">'+c+'</option>').join('');
   if($$('qt-cat'))$$('qt-cat').innerHTML=catOpts;
 }
+function openAddEvtTaskFromMT(){
+  var events=D().events.filter(e=>calcStatus(e)!=='done');
+  if(!events.length){alert('אין אירועים פעילים');return;}
+  var evtSel='<select id="mt-evt-sel" style="width:100%;margin-bottom:8px">'
+    +events.map(e=>'<option value="'+e.id+'">'+e.name+' ('+e.day+' '+e.month+')</option>').join('')
+    +'</select>';
+  // פתח מודאל הוספת משימה עם בחירת אירוע
+  var modal=document.createElement('div');
+  modal.id='tmp-evt-sel-modal';
+  modal.className='ovl open';
+  modal.innerHTML='<div class="mod" style="max-width:340px">'
+    +'<div class="mhd"><span class="mtt">בחרי אירוע</span><button class="xb" onclick="document.getElementById(\'tmp-evt-sel-modal\').remove()">×</button></div>'
+    +evtSel
+    +'<div style="display:flex;gap:6px;justify-content:flex-end">'
+    +'<button class="btn" onclick="document.getElementById(\'tmp-evt-sel-modal\').remove()">ביטול</button>'
+    +'<button class="btn bp" onclick="var id=parseInt(document.getElementById(\'mt-evt-sel\').value);document.getElementById(\'tmp-evt-sel-modal\').remove();CE=id;openAddEvtTask()"><i class="ti ti-check"></i> המשך</button>'
+    +'</div></div>';
+  document.body.appendChild(modal);
+}
+
 function rMTEvents(){
-  var el=$$('mt-events-tasks');if(!el)return;
+  var el=$$('mt-events-tasks-list');if(!el)return;
   var events=D().events.filter(e=>calcStatus(e)!=='done'&&e.tasks&&e.tasks.filter(t=>!t.d).length>0);
-  if(!events.length){el.innerHTML='';return;}
+  if(!events.length){el.innerHTML='<div style="font-size:12px;color:var(--txt2);text-align:center;padding:8px">אין משימות פתוחות תחת אירועים</div>';return;}
   var today=new Date();today.setHours(0,0,0,0);
   el.innerHTML=events.map(e=>{
     var openTasks=e.tasks.filter(t=>!t.d);
-    var rows=openTasks.map((t,i)=>{
+    var rows=openTasks.map(t=>{
       var ti=e.tasks.indexOf(t);
       var isOverdue=t.due&&new Date(t.due)<today;
       return '<div class="row" style="padding:6px 0">'
