@@ -2210,11 +2210,16 @@ function rmEV(){var e=GE();if(!e)return;e.vols.splice(editEVI,1);closeO('ovl-eev
 
 function rET(){
   var e=GE();if(!e)return;
-  var h=e.tasks.map((tk,i)=>{var vname='';if(tk.vid!=null){var v=GV(tk.vid);if(v)vname='<div style="font-size:10px;color:var(--tt);margin-top:1px"><i class="ti ti-user" style="font-size:10px"></i> '+v.n+'</div>';}
+  var today=new Date();today.setHours(0,0,0,0);
+  var h=e.tasks.map((tk,i)=>{
+    var vname='';if(tk.vid!=null){var v=GV(tk.vid);if(v)vname='<div style="font-size:10px;color:var(--tt);margin-top:1px"><i class="ti ti-user" style="font-size:10px"></i> '+v.n+'</div>';}
+    var isOverdue=tk.due&&!tk.d&&new Date(tk.due)<today;
     return '<div class="row"><input type="checkbox" class="chk"'+(tk.d?' checked':'')+' onchange="togET('+i+',this.checked)">'
       +'<div style="flex:1;min-width:0"><span style="font-size:12px'+(tk.d?';text-decoration:line-through;opacity:.55':'')+'">'+tk.t+'</span>'+vname+'</div>'
       +'<span class="tag '+ccat(tk.c)+'" style="font-size:10px">'+tk.c+'</span>'
-      +'<button class="ib" onclick="openAETEdit('+i+')"><i class="ti ti-edit" style="font-size:12px"></i></button>'+'<button class="ib del" onclick="rmET('+i+')"><i class="ti ti-trash" style="font-size:12px"></i></button></div>';
+      +(tk.due?'<span style="font-size:10px;color:'+(isOverdue?'var(--ct)':'var(--txt2)')+';white-space:nowrap">📅 '+new Date(tk.due).toLocaleDateString('he-IL',{day:'numeric',month:'short'})+'</span>':'')
+      +'<button class="ib" onclick="openAETEdit('+i+')"><i class="ti ti-edit" style="font-size:12px"></i></button>'
+      +'<button class="ib del" onclick="rmET('+i+')"><i class="ti ti-trash" style="font-size:12px"></i></button></div>';
   }).join('');
   $$('et-task-list').innerHTML=h||'<div style="font-size:12px;color:var(--txt2);padding:6px 0;text-align:center">אין משימות</div>';
 }
@@ -2797,11 +2802,9 @@ function rMTEvents(){
       var isOverdue=t.due&&new Date(t.due)<today;
       return '<div class="row" style="padding:6px 0">'
         +'<input type="checkbox" class="chk" onchange="togEvtTaskFromMT('+e.id+','+ti+',this.checked)">'
-        +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:12px">'+t.t+'</div>'
-        +(t.due?'<div style="font-size:10px;color:'+(isOverdue?'var(--ct)':'var(--txt2)')+'">📅 '+new Date(t.due).toLocaleDateString('he-IL',{day:'numeric',month:'short'})+(isOverdue?' – פג!':'')+'</div>':'')
-        +'</div>'
+        +'<span style="flex:1;font-size:12px">'+t.t+'</span>'
         +'<span class="tag '+ccat(t.c)+'" style="font-size:10px">'+t.c+'</span>'
+        +(t.due?'<span style="font-size:10px;color:'+(isOverdue?'var(--ct)':'var(--txt2)')+';white-space:nowrap">📅 '+new Date(t.due).toLocaleDateString('he-IL',{day:'numeric',month:'short'})+'</span>':'')
         +'<button class="ib" onclick="openEvtTaskEdit('+e.id+','+ti+')"><i class="ti ti-edit" style="font-size:12px"></i></button>'
         +'</div>';
     }).join('');
@@ -2831,11 +2834,12 @@ function rMT(){
     var isOverdue=t.due&&!t.d&&new Date(t.due)<today;
     var dueLabel=t.due?'<span style="font-size:10px;color:'+(isOverdue?'var(--ct)':'var(--txt2)')+'">📅 '+new Date(t.due).toLocaleDateString('he-IL',{day:'numeric',month:'short'})+'</span>':'';
     return '<div class="row"><input type="checkbox" class="chk"'+(t.d?' checked':'')+' onchange="togMT('+ri+',this.checked)">'
-      +'<div style="flex:1;min-width:0"><div style="font-size:12px'+(t.d?';text-decoration:line-through;opacity:.55':'')+'">'+t.t+'</div>'
-      +(dueLabel?'<div>'+dueLabel+'</div>':'')
-      +'</div>'
+      +'<span style="flex:1;font-size:12px'+(t.d?';text-decoration:line-through;opacity:.55':'')+'">'+t.t+'</span>'
       +'<span class="tag '+ccat(t.c)+'" style="font-size:10px">'+t.c+'</span>'
-      +'<button class="ib" onclick="openAMT('+ri+')"><i class="ti ti-edit" style="font-size:12px"></i></button>'+'<button class="ib del" onclick="rmMT('+ri+',this)"><i class="ti ti-trash" style="font-size:12px"></i></button></div>';
+      +(t.due?'<span style="font-size:10px;color:'+(isOverdue?'var(--ct)':'var(--txt2)')+';white-space:nowrap">📅 '+new Date(t.due).toLocaleDateString('he-IL',{day:'numeric',month:'short'})+'</span>':'')
+      +'<button class="ib" onclick="openAMT('+ri+')"><i class="ti ti-edit" style="font-size:12px"></i></button>'
+      +'<button class="ib del" onclick="rmMT('+ri+',this)"><i class="ti ti-trash" style="font-size:12px"></i></button>'
+      +'</div>';
   }).join('');
   rMTEvents();
 }
