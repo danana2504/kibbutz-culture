@@ -501,16 +501,9 @@ if(new URLSearchParams(window.location.search).get('mode')==='vol'){
       <span class="tab" onclick="filterMT('כללי',this)">כללי</span>
     </div>
     <div id="mt-list"></div>
-    <div style="display:flex;gap:6px;margin-top:9px">
-      <input type="text" id="qt-my" placeholder="הוסף משימה מהירה...">
-      <select id="qt-cat" style="width:auto;min-width:90px">
-        <option value="כללי">כללי</option>
-        <option value="דחוף">דחוף</option>
-        <option value="פרסום">פרסום</option>
-        <option value="מנהלי">מנהלי</option>
-      </select>
-      <button class="btn bsm bp" onclick="qMT()"><i class="ti ti-plus"></i></button>
-    </div>
+    <button class="btn bsm bp" style="margin-top:9px;width:100%;justify-content:center" onclick="openAMT(null)">
+      <i class="ti ti-plus"></i> הוסף משימה
+    </button>
   </div>
 
   <!-- משימות תחת אירועים -->
