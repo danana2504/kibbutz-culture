@@ -2751,12 +2751,10 @@ function saveV(){
   closeO('ovl-av');rVols();saveAll();
 }
 
+var MT_CATS=['כללי','דחוף','פרסום','מנהלי'];
 function buildMTTabs(){
-  var cats=taskCats||[];
-  var tabs='<span class="tab active" onclick="filterMT(\'all\',this)">הכל</span>';
-  cats.forEach(c=>{tabs+='<span class="tab" onclick="filterMT(\''+c+'\',this)">'+c+'</span>';});
-  $$('mt-cat-tabs').innerHTML=tabs;
-  if(cats.length){$$('qt-cat').innerHTML=mkCats(cats[0]);$$('amt-c')&&($$('amt-c').innerHTML=mkCats(cats[0]));}
+  var catOpts=MT_CATS.map(c=>'<option value="'+c+'">'+c+'</option>').join('');
+  if($$('qt-cat'))$$('qt-cat').innerHTML=catOpts;
 }
 function rMTEvents(){
   var el=$$('mt-events-tasks');if(!el)return;
@@ -2833,7 +2831,7 @@ function openAMT(idx){
     $$('amt-t').value='';$$('amt-c').value='כללי';$$('amt-due').value='';
     $$('amt-del-btn').style.display='none';
   }
-  openAMT(null);
+  openO('ovl-amt');
 }
 function deleteAMT(){
   if(_editAMTIdx===null)return;
