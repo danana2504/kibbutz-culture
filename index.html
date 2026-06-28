@@ -862,6 +862,7 @@ if(new URLSearchParams(window.location.search).get('mode')==='vol'){
 <div class="ovl" id="ovl-aet">
 <div class="mod">
   <div class="mhd"><span class="mtt" id="aet-title">הוספת משימה לאירוע</span><button class="xb" onclick="closeO('ovl-aet')">×</button></div>
+  <div class="frow" id="aet-evt-row" style="display:none"><label class="fl">אירוע</label><select id="aet-evt-sel"></select></div>
   <div class="frow"><label class="fl">תיאור המשימה</label><input type="text" id="aet-t"></div>
   <div class="frow"><label class="fl">קטגוריה</label><select id="aet-c"></select></div>
   <div class="frow"><label class="fl">אחראי/ת (אופציונלי)</label><select id="aet-v"><option value="">-- ללא שיבוץ --</option></select></div>
@@ -2220,16 +2221,14 @@ function rET(){
 function togET(i,v){var e=GE();if(!e)return;e.tasks[i].d=v;rET();rEV();saveAll();}
 function rmET(i){var e=GE();if(!e)return;e.tasks.splice(i,1);rET();saveAll();}
 var EVT_TASK_CATS=['לוגיסטיקה','תוכן','פרסום','כללי'];
-
-function mkEvtTaskCats(sel){
-  return EVT_TASK_CATS.map(c=>'<option value="'+c+'"'+(c===sel?' selected':'')+'>'+c+'</option>').join('');
-}
+function mkEvtTaskCats(sel){return EVT_TASK_CATS.map(c=>'<option value="'+c+'"'+(c===sel?' selected':'')+'>'+c+'</option>').join('');}
 
 function openAddEvtTask(){
   _editAETIdx=null;
   $$('aet-title').textContent='הוספת משימה לאירוע';
   $$('aet-t').value='';
   $$('aet-c').innerHTML=mkEvtTaskCats('לוגיסטיקה');
+  $$('aet-evt-row').style.display='none';
   $$('aet-v').innerHTML='<option value="">-- ללא שיבוץ --</option>'+(D().vols||[]).map(v=>'<option value="'+v.id+'">'+v.n+'</option>').join('');
   $$('aet-due').value='';$$('aet-del-btn').style.display='none';
   openO('ovl-aet');
@@ -2765,21 +2764,25 @@ function buildMTTabs(){
 function openAddEvtTaskFromMT(){
   var events=D().events.filter(e=>calcStatus(e)!=='done');
   if(!events.length){alert('אין אירועים פעילים');return;}
-  var evtSel='<select id="mt-evt-sel" style="width:100%;margin-bottom:8px">'
-    +events.map(e=>'<option value="'+e.id+'">'+e.name+' ('+e.day+' '+e.month+')</option>').join('')
-    +'</select>';
-  // פתח מודאל הוספת משימה עם בחירת אירוע
-  var modal=document.createElement('div');
-  modal.id='tmp-evt-sel-modal';
-  modal.className='ovl open';
-  modal.innerHTML='<div class="mod" style="max-width:340px">'
-    +'<div class="mhd"><span class="mtt">בחרי אירוע</span><button class="xb" onclick="document.getElementById(\'tmp-evt-sel-modal\').remove()">×</button></div>'
-    +evtSel
-    +'<div style="display:flex;gap:6px;justify-content:flex-end">'
-    +'<button class="btn" onclick="document.getElementById(\'tmp-evt-sel-modal\').remove()">ביטול</button>'
-    +'<button class="btn bp" onclick="var id=parseInt(document.getElementById(\'mt-evt-sel\').value);document.getElementById(\'tmp-evt-sel-modal\').remove();CE=id;openAddEvtTask()"><i class="ti ti-check"></i> המשך</button>'
-    +'</div></div>';
-  document.body.appendChild(modal);
+  _editAETIdx=null;
+  $$('aet-title').textContent='הוספת משימה לאירוע';
+  $$('aet-t').value='';
+  $$('aet-c').innerHTML=mkEvtTaskCats('לוגיסטיקה');
+  // הצג שדה בחירת אירוע
+  var evtRow=$$('aet-evt-row');
+  evtRow.style.display='flex';
+  $$('aet-evt-sel').innerHTML=events.map(e=>'<option value="'+e.id+'">'+e.name+' ('+e.day+' '+e.month+')</option>').join('');
+  // מלא מתנדבים לפי האירוע הראשון
+  var firstEvt=events[0];
+  CE=firstEvt.id;
+  $$('aet-v').innerHTML='<option value="">-- ללא שיבוץ --</option>'+(firstEvt.vols||[]).map(v=>{var vol=D().vols.find(x=>x.id===v.vid);return vol?'<option value="'+v.vid+'">'+vol.n+'</option>':''}).join('');
+  $$('aet-evt-sel').onchange=function(){
+    CE=parseInt(this.value);
+    var e=GE();if(!e)return;
+    $$('aet-v').innerHTML='<option value="">-- ללא שיבוץ --</option>'+(e.vols||[]).map(v=>{var vol=D().vols.find(x=>x.id===v.vid);return vol?'<option value="'+v.vid+'">'+vol.n+'</option>':''}).join('');
+  };
+  $$('aet-due').value='';$$('aet-del-btn').style.display='none';
+  openO('ovl-aet');
 }
 
 function rMTEvents(){
