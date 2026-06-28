@@ -2825,7 +2825,7 @@ function openEvtTaskEdit(evtId,ti){
 
 function rMT(){
   var ts=D().myTasks||[];var f=mtF==='all'?ts:ts.filter(t=>t.c===mtF);
-  if(!f.length){$$('mt-list').innerHTML='<div style="font-size:12px;color:var(--txt2);text-align:center;padding:16px">אין משימות בקטגוריה זו</div>';return;}
+  if(!f.length){$$('mt-list').innerHTML='<div style="font-size:12px;color:var(--txt2);text-align:center;padding:16px">אין משימות בקטגוריה זו</div>';rMTEvents();return;}
   $$('mt-list').innerHTML=f.map(t=>{var ri=D().myTasks.indexOf(t);
     var today=new Date();today.setHours(0,0,0,0);
     var isOverdue=t.due&&!t.d&&new Date(t.due)<today;
