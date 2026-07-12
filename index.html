@@ -645,6 +645,7 @@ if(new URLSearchParams(window.location.search).get('mode')==='vol'){
     <span class="tab" onclick="ET('equip',this)">ציוד</span>
     <span class="tab" onclick="ET('share',this)">הפצה</span>
     <span class="tab" onclick="ET('wa',this)">WhatsApp</span>
+    <span class="tab" onclick="ET('summary',this)">סיכום</span>
   </div>
   <div id="et-vols">
     <div id="ev-list"></div>
@@ -737,6 +738,24 @@ if(new URLSearchParams(window.location.search).get('mode')==='vol'){
       <i class="ti ti-brand-whatsapp"></i> העתק ופתח WhatsApp
     </button>
   </div>
+
+  <!-- סיכום אירוע -->
+  <div id="et-summary" style="display:none">
+    <div class="frow">
+      <label class="fl" style="font-weight:600">מה הלך טוב? ✅</label>
+      <textarea id="sum-good" style="min-height:80px;font-size:13px" placeholder="מה עבד טוב באירוע..." oninput="saveSummary()"></textarea>
+    </div>
+    <div class="frow">
+      <label class="fl" style="font-weight:600">מה אפשר לשפר? 🔧</label>
+      <textarea id="sum-improve" style="min-height:80px;font-size:13px" placeholder="מה כדאי לשנות בפעם הבאה..." oninput="saveSummary()"></textarea>
+    </div>
+    <div class="frow">
+      <label class="fl" style="font-weight:600">שימור – מה חשוב לזכור? 💡</label>
+      <textarea id="sum-keep" style="min-height:80px;font-size:13px" placeholder="תובנות, טיפים, מה לשמר..." oninput="saveSummary()"></textarea>
+    </div>
+    <div style="font-size:10px;color:var(--txt2);margin-top:4px;text-align:center"><i class="ti ti-device-floppy"></i> נשמר אוטומטית</div>
+  </div>
+
 </div>
 </div>
 
@@ -2002,7 +2021,7 @@ function ET(tab,btn){
   void el.offsetWidth; // reflow to restart animation
   el.classList.add('tab-fade');
   if(btn)btn.classList.add('active');
-  ({vols:rEV,tasks:rET,budget:rEB,equip:rEEq,share:rShr,wa:upWA}[tab]||function(){})();
+  ({vols:rEV,tasks:rET,budget:rEB,equip:rEEq,share:rShr,wa:upWA,summary:rSummary}[tab]||function(){})();
 }
 
 function rEV(){
@@ -2642,6 +2661,23 @@ function sendWAToPhone(){
   var txt=$$('wa-prev').value;
   var url='https://wa.me/?text='+encodeURIComponent(txt);
   window.open(url,'_blank');
+}
+
+function rSummary(){
+  var e=GE();if(!e)return;
+  var s=e.summary||{};
+  if($$('sum-good'))$$('sum-good').value=s.good||'';
+  if($$('sum-improve'))$$('sum-improve').value=s.improve||'';
+  if($$('sum-keep'))$$('sum-keep').value=s.keep||'';
+}
+
+function saveSummary(){
+  var e=GE();if(!e)return;
+  if(!e.summary)e.summary={};
+  e.summary.good=$$('sum-good').value;
+  e.summary.improve=$$('sum-improve').value;
+  e.summary.keep=$$('sum-keep').value;
+  saveAll();
 }
 
 function setWA(btn,t){wt=t;document.querySelectorAll('#et-wa .tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');upWA();}
