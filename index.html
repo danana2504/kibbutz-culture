@@ -546,6 +546,19 @@ if(new URLSearchParams(window.location.search).get('mode')==='vol'){
       <button class="btn bp bsm" onclick="openGEModal(null)"><i class="ti ti-plus"></i> הוסף פריט</button>
     </div>
   </div>
+
+  <!-- רשימת רכש -->
+  <div class="card" style="margin-bottom:10px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="font-size:12px;font-weight:600"><i class="ti ti-shopping-cart" style="color:var(--co)"></i> רשימת רכש</div>
+      <button class="btn bsm bp" onclick="openPurchaseModal(null)"><i class="ti ti-plus"></i> הוסף</button>
+    </div>
+    <div id="purchase-list">
+      <div style="font-size:12px;color:var(--txt2);text-align:center;padding:8px">אין פריטים לרכישה</div>
+    </div>
+  </div>
+
+  <!-- מלאי קיים -->
   <div class="card"><div id="ge-list"></div></div>
 </div>
 
@@ -954,6 +967,21 @@ if(new URLSearchParams(window.location.search).get('mode')==='vol'){
 </div>
 </div>
 
+<!-- PURCHASE LIST MODAL -->
+<div class="ovl" id="ovl-purchase">
+<div class="mod" style="max-width:360px">
+  <div class="mhd"><span class="mtt" id="purchase-ttl">הוסף לרשימת רכש</span><button class="xb" onclick="closeO('ovl-purchase')">×</button></div>
+  <div class="frow"><label class="fl">שם הפריט</label><input type="text" id="purchase-n" placeholder="מיקרופון, שולחן..."></div>
+  <div class="frow"><label class="fl">כמות נדרשת</label><input type="number" id="purchase-q" value="1" min="1"></div>
+  <div class="frow"><label class="fl">הערה</label><input type="text" id="purchase-note" placeholder="סיבה, דחיפות..."></div>
+  <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:8px">
+    <button class="btn bd bsm" id="purchase-del-btn" style="display:none;margin-left:auto" onclick="deletePurchase()"><i class="ti ti-trash"></i></button>
+    <button class="btn" onclick="closeO('ovl-purchase')">ביטול</button>
+    <button class="btn bp" onclick="savePurchase()"><i class="ti ti-check"></i> שמור</button>
+  </div>
+</div>
+</div>
+
 <!-- ADD/EDIT GLOBAL EQUIP -->
 <div class="ovl" id="ovl-age">
 <div class="mod">
@@ -963,14 +991,6 @@ if(new URLSearchParams(window.location.search).get('mode')==='vol'){
   <div class="frow"><label class="fl">מתוכם לא תקינים</label>
     <input type="number" id="age-q-broken" value="0" min="0" oninput="updateAgeAvail()">
     <div style="font-size:10px;color:var(--txt2);margin-top:3px" id="age-avail-label">זמינים לשימוש: 1</div>
-  </div>
-  <div class="frow"><label class="fl">מצב</label>
-    <select id="age-status">
-      <option value="ok">✅ תקין</option>
-      <option value="partial">⚠️ חלקי</option>
-      <option value="repair">🔧 לתיקון</option>
-      <option value="lost">❌ אבוד</option>
-    </select>
   </div>
   <div class="frow"><label class="fl">מיקום</label><input type="text" id="age-loc" placeholder="מחסן א, ועד תרבות..."></div>
   <div class="frow"><label class="fl">הערות</label><input type="text" id="age-note" placeholder="הערה על מצב הציוד..."></div>
@@ -1147,7 +1167,7 @@ var VP_EVT_ID=null,VP_KB_ID=null,aiHistory=[];
 var curPage='dash';
 
 function $$(id){return document.getElementById(id)}
-function D(){var d=kbData[CKB];if(!d){kbData[CKB]={annualBudget:0,events:[],vols:[],myTasks:[],gequip:[],gbudget:[],coords:[]};d=kbData[CKB];}if(!d.events)d.events=[];if(!d.vols)d.vols=[];if(!d.myTasks)d.myTasks=[];if(!d.gequip)d.gequip=[];if(!d.gbudget)d.gbudget=[];if(!d.coords)d.coords=[];return d;}
+function D(){var d=kbData[CKB];if(!d){kbData[CKB]={annualBudget:0,events:[],vols:[],myTasks:[],gequip:[],gbudget:[],coords:[]};d=kbData[CKB];}if(!d.events)d.events=[];if(!d.vols)d.vols=[];if(!d.myTasks)d.myTasks=[];if(!d.gequip)d.gequip=[];if(!d.gbudget)d.gbudget=[];if(!d.coords)d.coords=[];if(!d.purchaseList)d.purchaseList=[];return d;}
 function openO(id){$$(id).classList.add('open')}
 function closeO(id){$$(id).classList.remove('open')}
 function GE(){var e=D().events.find(e=>e.id===CE);return e||null;}
@@ -1519,6 +1539,7 @@ function fixFirebaseArrays(d){
       kb.vols=toArr(kb.vols);
       kb.myTasks=toArr(kb.myTasks);
       kb.gequip=toArr(kb.gequip);
+        kb.purchaseList=toArr(kb.purchaseList);
       kb.gbudget=toArr(kb.gbudget);
       kb.coords=toArr(kb.coords);
       kb.events.forEach(e=>{
@@ -3061,13 +3082,14 @@ function saveAlloc(){
 function exportEquipExcel(){
   function doExport(){
     var d=D();
-    var statusMap={ok:'תקין',partial:'חלקי',repair:'לתיקון',lost:'אבוד'};
 
     // גיליון 1 – מלאי כללי
-    var ws1=[['פריט','כמות כוללת','בשימוש','זמין','מצב','מיקום','הערות']];
+    var ws1=[['פריט','כמות כוללת','לא תקינים','זמינים','בשימוש','מיקום','הערות']];
     d.gequip.forEach(g=>{
       var used=d.events.reduce((s,e)=>s+e.equip.filter(q=>q.gid===g.id).reduce((ss,q)=>ss+q.qty,0),0);
-      ws1.push([g.n,g.q,used,g.q-used,statusMap[g.status||'ok']||'תקין',g.loc||'',g.note||'']);
+      var broken=g.qBroken||0;
+      var avail=Math.max(0,g.q-broken-used);
+      ws1.push([g.n,g.q,broken,avail,used,g.loc||'',g.note||'']);
     });
 
     // גיליון 2 – ציוד לפי אירוע
@@ -3118,6 +3140,72 @@ function rGE(){
       +'<button class="ib del" onclick="rmGE('+i+')"><i class="ti ti-trash"></i></button></div>';
   }).join(''):'<div style="font-size:12px;color:var(--txt2)">אין פריטים</div>';
 }
+// ── רשימת רכש ──
+var _editPurchaseIdx=null;
+
+function openPurchaseModal(idx){
+  _editPurchaseIdx=idx;
+  var delBtn=$$('purchase-del-btn');
+  if(idx!==null){
+    var p=D().purchaseList[idx];
+    $$('purchase-ttl').textContent='עריכת פריט לרכש';
+    $$('purchase-n').value=p.n;$$('purchase-q').value=p.q;$$('purchase-note').value=p.note||'';
+    if(delBtn)delBtn.style.display='flex';
+  } else {
+    $$('purchase-ttl').textContent='הוסף לרשימת רכש';
+    $$('purchase-n').value='';$$('purchase-q').value=1;$$('purchase-note').value='';
+    if(delBtn)delBtn.style.display='none';
+  }
+  openO('ovl-purchase');
+}
+
+function savePurchase(){
+  var n=$$('purchase-n').value.trim();if(!n)return;
+  var d=D();if(!d.purchaseList)d.purchaseList=[];
+  var obj={n,q:parseInt($$('purchase-q').value)||1,note:$$('purchase-note').value.trim()};
+  if(_editPurchaseIdx!==null) d.purchaseList[_editPurchaseIdx]=obj;
+  else d.purchaseList.push(obj);
+  closeO('ovl-purchase');rPurchase();saveAll();
+}
+
+function deletePurchase(){
+  if(_editPurchaseIdx===null)return;
+  D().purchaseList.splice(_editPurchaseIdx,1);
+  closeO('ovl-purchase');rPurchase();saveAll();
+}
+
+function purchasedToStock(idx){
+  var d=D();if(!d.purchaseList)return;
+  var p=d.purchaseList[idx];
+  if(!confirm('להעביר "'+p.n+'" ('+p.q+' יח\') למלאי?'))return;
+  // הוסף למלאי
+  d.gequip.push({id:nxt++,n:p.n,q:p.q,qBroken:0,loc:'',note:''});
+  // הסר מרשימת רכש
+  d.purchaseList.splice(idx,1);
+  rPurchase();rGE();saveAll();
+}
+
+function rPurchase(){
+  var d=D();
+  var el=$$('purchase-list');if(!el)return;
+  var list=d.purchaseList||[];
+  if(!list.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--txt2);text-align:center;padding:8px">אין פריטים לרכישה</div>';
+    return;
+  }
+  el.innerHTML=list.map((p,i)=>
+    '<div class="row">'
+    +'<div style="flex:1;min-width:0">'
+    +'<div style="font-size:12px;font-weight:500">'+p.n+'</div>'
+    +(p.note?'<div style="font-size:10px;color:var(--txt2)">'+p.note+'</div>':'')
+    +'</div>'
+    +'<span style="font-size:11px;color:var(--txt2);min-width:40px;text-align:center">'+p.q+' יח\'</span>'
+    +'<button class="btn bsm" style="background:var(--tl);border-color:var(--teal);color:var(--tt);font-size:11px" onclick="purchasedToStock('+i+')" title="נרכש - העבר למלאי">✅ נרכש</button>'
+    +'<button class="ib" onclick="openPurchaseModal('+i+')"><i class="ti ti-edit"></i></button>'
+    +'</div>'
+  ).join('');
+}
+
 function updateAgeAvail(){
   var q=parseInt($$('age-q').value)||0;
   var broken=parseInt($$('age-q-broken').value)||0;
@@ -3131,13 +3219,11 @@ function openGEModal(idx){
   if(idx!==null){var g=D().gequip[idx];
     $$('age-n').value=g.n;$$('age-q').value=g.q;
     if($$('age-q-broken'))$$('age-q-broken').value=g.qBroken||0;
-    if($$('age-status'))$$('age-status').value=g.status||'ok';
     updateAgeAvail();
     if($$('age-loc'))$$('age-loc').value=g.loc||'';
     if($$('age-note'))$$('age-note').value=g.note||'';
   }else{$$('age-n').value='';$$('age-q').value=1;
     if($$('age-q-broken'))$$('age-q-broken').value=0;
-    if($$('age-status'))$$('age-status').value='ok';
     if($$('age-loc'))$$('age-loc').value='';
     updateAgeAvail();
     if($$('age-note'))$$('age-note').value='';
@@ -3148,11 +3234,10 @@ function saveGE(){
   var n=$$('age-n').value.trim();if(!n)return;var d=D();
   var q=parseInt($$('age-q').value)||1;
   var qBroken=parseInt($$('age-q-broken')&&$$('age-q-broken').value)||0;
-  var status=$$('age-status')?$$('age-status').value:'ok';
   var loc=$$('age-loc')?$$('age-loc').value.trim():'';
   var note=$$('age-note')?$$('age-note').value.trim():'';
-  if(editGEIdx!==null){Object.assign(d.gequip[editGEIdx],{n,q,qBroken,status,loc,note});}
-  else d.gequip.push({id:nxt++,n,q,qBroken,status,loc,note});
+  if(editGEIdx!==null){Object.assign(d.gequip[editGEIdx],{n,q,qBroken,loc,note});}
+  else d.gequip.push({id:nxt++,n,q,qBroken,loc,note});
   closeO('ovl-age');rGE();saveAll();
 }
 function rmGE(i){if(confirm('למחוק פריט זה?')){D().gequip.splice(i,1);rGE();saveAll();}}
