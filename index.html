@@ -670,10 +670,18 @@ if(new URLSearchParams(window.location.search).get('mode')==='vol'){
     </div>
   </div>
   <div id="et-equip" style="display:none">
-    <div style="display:flex;justify-content:flex-end;margin-bottom:7px"><button class="btn bp bsm" onclick="openAEE()"><i class="ti ti-plus"></i> הוסף מהמחסן</button></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:7px;align-items:center">
+      <button class="btn bsm bd" onclick="closeEventEquip()"><i class="ti ti-archive"></i> סיים והחזר מלאי</button>
+      <button class="btn bp bsm" onclick="openAEE()"><i class="ti ti-plus"></i> הוסף מהמחסן</button>
+    </div>
     <div id="et-eq-list"></div>
     <div class="pb" style="margin-top:10px;height:5px"><div class="pf" id="et-eq-prog"></div></div>
     <div style="font-size:11px;color:var(--txt2);margin-top:3px" id="et-eq-txt"></div>
+    <!-- סיכום ציוד קודם -->
+    <div id="et-eq-history" style="display:none;margin-top:12px;padding-top:10px;border-top:1px solid var(--bdr)">
+      <div style="font-size:11px;font-weight:600;color:var(--txt2);margin-bottom:6px">סיכום ציוד (בסיום האירוע)</div>
+      <div id="et-eq-history-list"></div>
+    </div>
   </div>
   <div id="et-share" style="display:none">
     <div class="shr-box">
@@ -935,6 +943,7 @@ if(new URLSearchParams(window.location.search).get('mode')==='vol'){
   <div class="mhd"><span class="mtt" id="eeq-title">עריכת ציוד</span><button class="xb" onclick="closeO('ovl-eeq')">×</button></div>
   <div class="frow"><label class="fl">כמות</label><input type="number" id="eeq-qty" min="1"></div>
   <div class="frow"><label class="fl">סטטוס</label><select id="eeq-ok"><option value="1">מושג ✅</option><option value="0">בתהליך ⏳</option></select></div>
+  <div class="frow"><label class="fl">מקור</label><input type="text" id="eeq-source" placeholder="מחסן קיבוץ, גן ילדים, שכן..."></div>
   <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:8px">
     <button class="btn bd bsm" onclick="rmEEqItem()" style="margin-left:auto"><i class="ti ti-trash"></i> הסר</button>
     <button class="btn" onclick="closeO('ovl-eeq')">ביטול</button>
@@ -949,7 +958,18 @@ if(new URLSearchParams(window.location.search).get('mode')==='vol'){
   <div class="mhd"><span class="mtt" id="age-ttl">פריט ציוד חדש</span><button class="xb" onclick="closeO('ovl-age')">×</button></div>
   <div class="frow"><label class="fl">שם הפריט</label><input type="text" id="age-n"></div>
   <div class="frow"><label class="fl">כמות כוללת</label><input type="number" id="age-q" value="1" min="1"></div>
+  <div class="frow"><label class="fl">מצב</label>
+    <select id="age-status">
+      <option value="ok">✅ תקין</option>
+      <option value="partial">⚠️ חלקי</option>
+      <option value="repair">🔧 לתיקון</option>
+      <option value="lost">❌ אבוד</option>
+    </select>
+  </div>
+  <div class="frow"><label class="fl">מיקום</label><input type="text" id="age-loc" placeholder="מחסן א, ועד תרבות..."></div>
+  <div class="frow"><label class="fl">הערות</label><input type="text" id="age-note" placeholder="הערה על מצב הציוד..."></div>
   <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:8px">
+    <button class="btn bd bsm" id="age-del-btn" style="display:none;margin-left:auto" onclick="deleteGE()"><i class="ti ti-trash"></i></button>
     <button class="btn" onclick="closeO('ovl-age')">ביטול</button>
     <button class="btn bp" onclick="saveGE()"><i class="ti ti-check"></i> שמור</button>
   </div>
@@ -2367,6 +2387,7 @@ function rEEq(){
   var h=e.equip.map((eq,i)=>{var g=geq(eq.gid);var nm=g?g.n:'(פריט לא קיים)';
     return '<div class="row"><span style="flex:1;font-size:12px;font-weight:500">'+nm+'</span>'
       +'<span style="font-size:11px;color:var(--txt2);min-width:30px;text-align:center">'+eq.qty+'</span>'
+      +(eq.source?'<span style="font-size:10px;color:var(--txt2)">'+eq.source+'</span>':'')
       +(eq.ok?'<span class="tag tg" style="font-size:10px">מושג</span>':'<span class="tag ta" style="font-size:10px">בתהליך</span>')
       +'<button class="ib" onclick="openEEqEdit('+i+')"><i class="ti ti-edit"></i></button></div>';
   }).join('');
@@ -2374,6 +2395,7 @@ function rEEq(){
   var done=e.equip.filter(q=>q.ok).length,tot=e.equip.length;
   $$('et-eq-prog').style.width=(tot?Math.round(done/tot*100):0)+'%';
   $$('et-eq-txt').textContent=done+' מתוך '+tot+' פריטים מוכנים';
+  rEqHistory();
 }
 function getAvailableQty(gid){
   var g=geq(gid);if(!g)return 0;
@@ -2438,6 +2460,8 @@ function openEEqEdit(i){
   var usedByOthers=D().events.reduce((s,ev)=>s+ev.equip.filter((q,qi)=>q.gid===eq.gid&&!(ev.id===CE&&qi===i)).reduce((ss,q)=>ss+q.qty,0),0);
   var maxQty=g?(g.q-usedByOthers):eq.qty;
   $$('eeq-qty').value=eq.qty;
+  $$('eeq-ok').value=eq.ok?'1':'0';
+  if($$('eeq-source'))$$('eeq-source').value=eq.source||'';
   $$('eeq-qty').max=maxQty;
   $$('eeq-qty').title='מקסימום זמין: '+maxQty;
   $$('eeq-ok').value=eq.ok?'1':'0';
@@ -2451,9 +2475,40 @@ function saveEEqItem(){
   var maxQty=g?(g.q-usedByOthers):newQty;
   if(newQty>maxQty){alert('כמות חורגת מהמלאי הזמין (מקסימום: '+maxQty+')');return;}
   eq.qty=newQty;eq.ok=$$('eeq-ok').value==='1';
+  if($$('eeq-source'))eq.source=$$('eeq-source').value.trim();
   closeO('ovl-eeq');rEEq();rGE();saveAll();
 }
 function rmEEqItem(){var e=GE();if(!e)return;e.equip.splice(editEEqI,1);closeO('ovl-eeq');rEEq();rGE();saveAll();}
+
+function closeEventEquip(){
+  var e=GE();if(!e)return;
+  if(!confirm('לסיים את הציוד לאירוע ולהחזיר למלאי?'))return;
+  // שמור סיכום ציוד
+  var snapshot=e.equip.map(eq=>{
+    var g=geq(eq.gid);
+    return {name:g?g.n:'?',qty:eq.qty,source:eq.source||'מחסן קיבוץ',ok:eq.ok};
+  });
+  e.equipHistory={date:new Date().toLocaleDateString('he-IL'),items:snapshot};
+  // נקה ציוד האירוע
+  e.equip=[];
+  rEEq();rGE();saveAll();
+  alert('✅ הציוד הוחזר למלאי וסיכום נשמר!');
+}
+
+function rEqHistory(){
+  var e=GE();if(!e||!e.equipHistory)return;
+  var h=$$('et-eq-history');var hl=$$('et-eq-history-list');
+  if(!h||!hl)return;
+  h.style.display='block';
+  hl.innerHTML='<div style="font-size:10px;color:var(--txt2);margin-bottom:4px">'+e.equipHistory.date+'</div>'
+    +e.equipHistory.items.map(item=>
+      '<div class="row"><span style="flex:1;font-size:12px">'+item.name+'</span>'
+      +'<span style="font-size:11px;color:var(--txt2)">'+item.qty+'</span>'
+      +(item.source?'<span style="font-size:10px;color:var(--txt2);margin-right:6px">'+item.source+'</span>':'')
+      +(item.ok?'<span class="tag tg" style="font-size:10px">הושג</span>':'<span class="tag tc" style="font-size:10px">לא הושג</span>')
+      +'</div>'
+    ).join('');
+}
 
 function sendShareWA(){
   var url=$$('shr-url').value;
@@ -3001,14 +3056,43 @@ function rGE(){
   var d=D();
   $$('ge-list').innerHTML=d.gequip.length?d.gequip.map((g,i)=>{
     var used=d.events.reduce((s,e)=>s+e.equip.filter(q=>q.gid===g.id).reduce((ss,q)=>ss+q.qty,0),0);var av=g.q-used;
-    return '<div class="row"><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600">'+g.n+'</div><div style="font-size:11px;color:var(--txt2)">בשימוש: '+used+' · זמין: '+av+' מתוך '+g.q+'</div></div>'
-      +'<span class="tag '+(av>0?'tg':'tc')+'" style="font-size:10px">'+(av>0?av+' זמין':'אזל')+'</span>'
+    var statusMap={ok:'✅ תקין',partial:'⚠️ חלקי',repair:'🔧 לתיקון',lost:'❌ אבוד'};
+    var statusLabel=statusMap[g.status||'ok']||'✅ תקין';
+    return '<div class="row"><div style="flex:1;min-width:0">'
+      +'<div style="font-size:12px;font-weight:600">'+g.n+'</div>'
+      +'<div style="font-size:11px;color:var(--txt2)">בשימוש: '+used+' · זמין: '+av+' מתוך '+g.q
+      +(g.loc?' · 📍 '+g.loc:'')+'</div>'
+      +'<div style="font-size:10px;color:var(--txt2)">'+statusLabel+(g.note?' · '+g.note:'')+'</div>'
+      +'</div>'
       +'<button class="ib" onclick="openGEModal('+i+')"><i class="ti ti-edit"></i></button>'
       +'<button class="ib del" onclick="rmGE('+i+')"><i class="ti ti-trash"></i></button></div>';
   }).join(''):'<div style="font-size:12px;color:var(--txt2)">אין פריטים</div>';
 }
-function openGEModal(idx){editGEIdx=idx;$$('age-ttl').textContent=idx===null?'פריט ציוד חדש':'עריכת פריט';if(idx!==null){var g=D().gequip[idx];$$('age-n').value=g.n;$$('age-q').value=g.q;}else{$$('age-n').value='';$$('age-q').value=1;}openO('ovl-age');}
-function saveGE(){var n=$$('age-n').value.trim();if(!n)return;var d=D();if(editGEIdx!==null){d.gequip[editGEIdx].n=n;d.gequip[editGEIdx].q=parseInt($$('age-q').value)||1;}else d.gequip.push({id:nxt++,n,q:parseInt($$('age-q').value)||1});closeO('ovl-age');rGE();saveAll();}
+function openGEModal(idx){
+  editGEIdx=idx;$$('age-ttl').textContent=idx===null?'פריט ציוד חדש':'עריכת פריט';
+  var delBtn=$$('age-del-btn');if(delBtn)delBtn.style.display=idx!==null?'flex':'none';
+  if(idx!==null){var g=D().gequip[idx];
+    $$('age-n').value=g.n;$$('age-q').value=g.q;
+    if($$('age-status'))$$('age-status').value=g.status||'ok';
+    if($$('age-loc'))$$('age-loc').value=g.loc||'';
+    if($$('age-note'))$$('age-note').value=g.note||'';
+  }else{$$('age-n').value='';$$('age-q').value=1;
+    if($$('age-status'))$$('age-status').value='ok';
+    if($$('age-loc'))$$('age-loc').value='';
+    if($$('age-note'))$$('age-note').value='';
+  }openO('ovl-age');
+}
+function deleteGE(){if(editGEIdx===null)return;D().gequip.splice(editGEIdx,1);closeO('ovl-age');rGE();saveAll();}
+function saveGE(){
+  var n=$$('age-n').value.trim();if(!n)return;var d=D();
+  var q=parseInt($$('age-q').value)||1;
+  var status=$$('age-status')?$$('age-status').value:'ok';
+  var loc=$$('age-loc')?$$('age-loc').value.trim():'';
+  var note=$$('age-note')?$$('age-note').value.trim():'';
+  if(editGEIdx!==null){Object.assign(d.gequip[editGEIdx],{n,q,status,loc,note});}
+  else d.gequip.push({id:nxt++,n,q,status,loc,note});
+  closeO('ovl-age');rGE();saveAll();
+}
 function rmGE(i){if(confirm('למחוק פריט זה?')){D().gequip.splice(i,1);rGE();saveAll();}}
 
 function rCoords(){
