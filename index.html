@@ -540,7 +540,12 @@ if(new URLSearchParams(window.location.search).get('mode')==='vol'){
 
 <!-- GLOBAL EQUIP -->
 <div class="pg" id="pg-gequip">
-  <div class="sh"><span class="sh-t">מחסן ציוד</span><button class="btn bp bsm" onclick="openGEModal(null)"><i class="ti ti-plus"></i> הוסף פריט</button></div>
+  <div class="sh"><span class="sh-t">מחסן ציוד</span>
+    <div style="display:flex;gap:6px">
+      <button class="btn bsm" onclick="exportEquipExcel()"><i class="ti ti-file-spreadsheet"></i> ייצא Excel</button>
+      <button class="btn bp bsm" onclick="openGEModal(null)"><i class="ti ti-plus"></i> הוסף פריט</button>
+    </div>
+  </div>
   <div class="card"><div id="ge-list"></div></div>
 </div>
 
@@ -677,11 +682,7 @@ if(new URLSearchParams(window.location.search).get('mode')==='vol'){
     <div id="et-eq-list"></div>
     <div class="pb" style="margin-top:10px;height:5px"><div class="pf" id="et-eq-prog"></div></div>
     <div style="font-size:11px;color:var(--txt2);margin-top:3px" id="et-eq-txt"></div>
-    <!-- סיכום ציוד קודם -->
-    <div id="et-eq-history" style="display:none;margin-top:12px;padding-top:10px;border-top:1px solid var(--bdr)">
-      <div style="font-size:11px;font-weight:600;color:var(--txt2);margin-bottom:6px">סיכום ציוד (בסיום האירוע)</div>
-      <div id="et-eq-history-list"></div>
-    </div>
+
   </div>
   <div id="et-share" style="display:none">
     <div class="shr-box">
@@ -943,12 +944,7 @@ if(new URLSearchParams(window.location.search).get('mode')==='vol'){
 <div class="mod" style="max-width:360px">
   <div class="mhd"><span class="mtt" id="eeq-title">עריכת ציוד</span><button class="xb" onclick="closeO('ovl-eeq')">×</button></div>
   <div class="frow"><label class="fl">כמות</label><input type="number" id="eeq-qty" min="1"></div>
-  <div class="frow">
-    <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer">
-      <input type="checkbox" id="eeq-not-ok" class="chk" style="width:auto">
-      <span>⚠️ לא הושג / בתהליך השגה</span>
-    </label>
-  </div>
+
   <div class="frow"><label class="fl">מקור</label><input type="text" id="eeq-source" placeholder="מחסן קיבוץ, גן ילדים..."></div>
   <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:8px">
     <button class="btn bd bsm" onclick="rmEEqItem()" style="margin-left:auto"><i class="ti ti-trash"></i> הסר</button>
@@ -2394,7 +2390,6 @@ function rEEq(){
     return '<div class="row"><span style="flex:1;font-size:12px;font-weight:500">'+nm+'</span>'
       +'<span style="font-size:11px;color:var(--txt2);min-width:30px;text-align:center">'+eq.qty+'</span>'
       +(eq.source?'<span style="font-size:10px;color:var(--txt2)">📦 '+eq.source+'</span>':'')
-      +(eq.ok?'<span class="tag tg" style="font-size:10px">✅ הושג</span>':'<span class="tag ta" style="font-size:10px">⚠️ בהשגה</span>')
       +'<button class="ib" onclick="openEEqEdit('+i+')"><i class="ti ti-edit"></i></button></div>';
   }).join('');
   $$('et-eq-list').innerHTML=h||'<div style="font-size:12px;color:var(--txt2);padding:6px 0;text-align:center">לא נבחר ציוד</div>';
@@ -3056,6 +3051,46 @@ function saveAlloc(){
   if(allocEditIdx!==null){d.gbudget[allocEditIdx].a=amt;d.gbudget[allocEditIdx].eid=eid;if(eid<0)d.gbudget[allocEditIdx].desc='רזרבה כללית';}
   else d.gbudget.push({eid,a:amt,desc:eid<0?'רזרבה כללית':undefined});
   closeO('ovl-alloc');rGB();updateDash();saveAll();
+}
+
+function exportEquipExcel(){
+  function doExport(){
+    var d=D();
+    var statusMap={ok:'תקין',partial:'חלקי',repair:'לתיקון',lost:'אבוד'};
+
+    // גיליון 1 – מלאי כללי
+    var ws1=[['פריט','כמות כוללת','בשימוש','זמין','מצב','מיקום','הערות']];
+    d.gequip.forEach(g=>{
+      var used=d.events.reduce((s,e)=>s+e.equip.filter(q=>q.gid===g.id).reduce((ss,q)=>ss+q.qty,0),0);
+      ws1.push([g.n,g.q,used,g.q-used,statusMap[g.status||'ok']||'תקין',g.loc||'',g.note||'']);
+    });
+
+    // גיליון 2 – ציוד לפי אירוע
+    var ws2=[['אירוע','תאריך','פריט','כמות','מקור']];
+    d.events.forEach(e=>{
+      (e.equip||[]).forEach(eq=>{
+        var g=d.gequip.find(x=>x.id===eq.gid);
+        ws2.push([e.name,e.day+' '+e.month,g?g.n:'?',eq.qty,eq.source||'']);
+      });
+    });
+
+    var wb=XLSX.utils.book_new();
+    function addSheet(wb,data,name){
+      var ws=XLSX.utils.aoa_to_sheet(data);
+      ws['!sheetViews']=[{rightToLeft:true}];
+      XLSX.utils.book_append_sheet(wb,ws,name);
+    }
+    addSheet(wb,ws1,'מלאי ציוד');
+    addSheet(wb,ws2,'ציוד לפי אירוע');
+    XLSX.writeFile(wb,'מלאי_ציוד_'+new Date().toLocaleDateString('he-IL').replace(/\//g,'-')+'.xlsx');
+  }
+
+  if(window.XLSX){doExport();}
+  else{
+    var s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload=doExport;document.head.appendChild(s);
+  }
 }
 
 function rGE(){
