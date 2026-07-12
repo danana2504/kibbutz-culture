@@ -959,7 +959,11 @@ if(new URLSearchParams(window.location.search).get('mode')==='vol'){
 <div class="mod">
   <div class="mhd"><span class="mtt" id="age-ttl">פריט ציוד חדש</span><button class="xb" onclick="closeO('ovl-age')">×</button></div>
   <div class="frow"><label class="fl">שם הפריט</label><input type="text" id="age-n"></div>
-  <div class="frow"><label class="fl">כמות כוללת</label><input type="number" id="age-q" value="1" min="1"></div>
+  <div class="frow"><label class="fl">כמות כוללת</label><input type="number" id="age-q" value="1" min="1" oninput="updateAgeAvail()"></div>
+  <div class="frow"><label class="fl">מתוכם לא תקינים</label>
+    <input type="number" id="age-q-broken" value="0" min="0" oninput="updateAgeAvail()">
+    <div style="font-size:10px;color:var(--txt2);margin-top:3px" id="age-avail-label">זמינים לשימוש: 1</div>
+  </div>
   <div class="frow"><label class="fl">מצב</label>
     <select id="age-status">
       <option value="ok">✅ תקין</option>
@@ -2400,8 +2404,9 @@ function rEEq(){
 }
 function getAvailableQty(gid){
   var g=geq(gid);if(!g)return 0;
+  var broken=g.qBroken||0;
   var used=D().events.reduce((s,e)=>s+e.equip.filter(q=>q.gid===gid).reduce((ss,q)=>ss+q.qty,0),0);
-  return Math.max(0,g.q-used);
+  return Math.max(0,g.q-broken-used);
 }
 function openAEE(){
   var e=GE();if(!e)return;
@@ -3099,27 +3104,42 @@ function rGE(){
     var used=d.events.reduce((s,e)=>s+e.equip.filter(q=>q.gid===g.id).reduce((ss,q)=>ss+q.qty,0),0);var av=g.q-used;
     var statusMap={ok:'✅ תקין',partial:'⚠️ חלקי',repair:'🔧 לתיקון',lost:'❌ אבוד'};
     var statusLabel=statusMap[g.status||'ok']||'✅ תקין';
+    var broken=g.qBroken||0;
+    var avail=g.q-broken-used;
     return '<div class="row"><div style="flex:1;min-width:0">'
       +'<div style="font-size:12px;font-weight:600">'+g.n+'</div>'
-      +'<div style="font-size:11px;color:var(--txt2)">בשימוש: '+used+' · זמין: '+av+' מתוך '+g.q
+      +'<div style="font-size:11px;color:var(--txt2)">סה"כ: '+g.q
+      +(broken>0?' · <span style="color:var(--ct)">'+broken+' לא תקינים</span>':'')
+      +' · בשימוש: '+used+' · זמין: '+Math.max(0,avail)
       +(g.loc?' · 📍 '+g.loc:'')+'</div>'
-      +'<div style="font-size:10px;color:var(--txt2)">'+statusLabel+(g.note?' · '+g.note:'')+'</div>'
+      +(g.note?'<div style="font-size:10px;color:var(--txt2)">'+g.note+'</div>':'')
       +'</div>'
       +'<button class="ib" onclick="openGEModal('+i+')"><i class="ti ti-edit"></i></button>'
       +'<button class="ib del" onclick="rmGE('+i+')"><i class="ti ti-trash"></i></button></div>';
   }).join(''):'<div style="font-size:12px;color:var(--txt2)">אין פריטים</div>';
 }
+function updateAgeAvail(){
+  var q=parseInt($$('age-q').value)||0;
+  var broken=parseInt($$('age-q-broken').value)||0;
+  var avail=Math.max(0,q-broken);
+  if($$('age-avail-label'))$$('age-avail-label').textContent='זמינים לשימוש: '+avail;
+}
+
 function openGEModal(idx){
   editGEIdx=idx;$$('age-ttl').textContent=idx===null?'פריט ציוד חדש':'עריכת פריט';
   var delBtn=$$('age-del-btn');if(delBtn)delBtn.style.display=idx!==null?'flex':'none';
   if(idx!==null){var g=D().gequip[idx];
     $$('age-n').value=g.n;$$('age-q').value=g.q;
+    if($$('age-q-broken'))$$('age-q-broken').value=g.qBroken||0;
     if($$('age-status'))$$('age-status').value=g.status||'ok';
+    updateAgeAvail();
     if($$('age-loc'))$$('age-loc').value=g.loc||'';
     if($$('age-note'))$$('age-note').value=g.note||'';
   }else{$$('age-n').value='';$$('age-q').value=1;
+    if($$('age-q-broken'))$$('age-q-broken').value=0;
     if($$('age-status'))$$('age-status').value='ok';
     if($$('age-loc'))$$('age-loc').value='';
+    updateAgeAvail();
     if($$('age-note'))$$('age-note').value='';
   }openO('ovl-age');
 }
@@ -3127,11 +3147,12 @@ function deleteGE(){if(editGEIdx===null)return;D().gequip.splice(editGEIdx,1);cl
 function saveGE(){
   var n=$$('age-n').value.trim();if(!n)return;var d=D();
   var q=parseInt($$('age-q').value)||1;
+  var qBroken=parseInt($$('age-q-broken')&&$$('age-q-broken').value)||0;
   var status=$$('age-status')?$$('age-status').value:'ok';
   var loc=$$('age-loc')?$$('age-loc').value.trim():'';
   var note=$$('age-note')?$$('age-note').value.trim():'';
-  if(editGEIdx!==null){Object.assign(d.gequip[editGEIdx],{n,q,status,loc,note});}
-  else d.gequip.push({id:nxt++,n,q,status,loc,note});
+  if(editGEIdx!==null){Object.assign(d.gequip[editGEIdx],{n,q,qBroken,status,loc,note});}
+  else d.gequip.push({id:nxt++,n,q,qBroken,status,loc,note});
   closeO('ovl-age');rGE();saveAll();
 }
 function rmGE(i){if(confirm('למחוק פריט זה?')){D().gequip.splice(i,1);rGE();saveAll();}}
