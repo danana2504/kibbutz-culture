@@ -3148,11 +3148,12 @@ function rGE(){
     var statusLabel=statusMap[g.status||'ok']||'✅ תקין';
     var broken=g.qBroken||0;
     var avail=g.q-broken-used;
+    var availDisplay=avail<0?'<span style="color:var(--ct);font-weight:700">⚠️ חסר '+Math.abs(avail)+'</span>':'<span style="color:var(--tt)">'+avail+'</span>';
     return '<div class="row"><div style="flex:1;min-width:0">'
       +'<div style="font-size:12px;font-weight:600">'+g.n+'</div>'
       +'<div style="font-size:11px;color:var(--txt2)">סה"כ: '+g.q
       +(broken>0?' · <span style="color:var(--ct)">'+broken+' לא תקינים</span>':'')
-      +' · בשימוש: '+used+' · זמין: '+Math.max(0,avail)
+      +' · בשימוש: '+used+' · זמין: '+availDisplay
       +(g.loc?' · 📍 '+g.loc:'')+'</div>'
       +(g.note?'<div style="font-size:10px;color:var(--txt2)">'+g.note+'</div>':'')
       +'</div>'
@@ -3304,6 +3305,17 @@ function saveGE(){
   var qBroken=parseInt($$('age-q-broken')&&$$('age-q-broken').value)||0;
   var loc=$$('age-loc')?$$('age-loc').value.trim():'';
   var note=$$('age-note')?$$('age-note').value.trim():'';
+
+  // בדיקת חריגה – כמות לא תקינים גורמת לחוסר
+  if(editGEIdx!==null){
+    var gid=d.gequip[editGEIdx].id;
+    var used=d.events.reduce((s,e)=>s+e.equip.filter(q=>q.gid===gid).reduce((ss,q)=>ss+q.qty,0),0);
+    var avail=q-qBroken-used;
+    if(avail<0){
+      if(!confirm('⚠️ שים לב!\n\n'+Math.abs(avail)+' יחידות מוקצות לאירועים מעבר לזמין.\nהמלאי יוצג כחסר.\n\nלהמשיך בכל זאת?'))return;
+    }
+  }
+
   if(editGEIdx!==null){Object.assign(d.gequip[editGEIdx],{n,q,qBroken,loc,note});}
   else d.gequip.push({id:nxt++,n,q,qBroken,loc,note});
   closeO('ovl-age');rGE();saveAll();
