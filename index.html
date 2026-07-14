@@ -3306,8 +3306,15 @@ function loadEquipViewData(){
 function saveEquipViewData(callback){
   db.ref('kibbutz/main/kbData/'+_equipViewKbId).once('value').then(function(snap){
     var kb=snap.val()||{};
+    if(!kb.gequip)kb.gequip=[];
+    if(!kb.purchaseList)kb.purchaseList=[];
+    // המר objects לarrays אם צריך
+    if(!Array.isArray(kb.gequip))kb.gequip=Object.values(kb.gequip);
+    if(!Array.isArray(kb.purchaseList))kb.purchaseList=Object.values(kb.purchaseList);
     if(callback)callback(kb);
-    db.ref('kibbutz/main/kbData/'+_equipViewKbId).set(kb).then(loadEquipViewData);
+    db.ref('kibbutz/main/kbData/'+_equipViewKbId+'/gequip').set(kb.gequip);
+    db.ref('kibbutz/main/kbData/'+_equipViewKbId+'/purchaseList').set(kb.purchaseList);
+    setTimeout(loadEquipViewData, 500);
   });
 }
 
@@ -3448,13 +3455,20 @@ function saveGE(){
   var loc=$$('age-loc')?$$('age-loc').value.trim():'';
   var note=$$('age-note')?$$('age-note').value.trim():'';
 
-  // בדיקת חריגה – כמות לא תקינים גורמת לחוסר
+  // בדיקת חריגה
   if(editGEIdx!==null){
     var gid=d.gequip[editGEIdx].id;
     var used=d.events.reduce((s,e)=>s+e.equip.filter(q=>q.gid===gid).reduce((ss,q)=>ss+q.qty,0),0);
     var avail=q-qBroken-used;
     if(avail<0){
-      if(!confirm('⚠️ שים לב!\n\n'+Math.abs(avail)+' יחידות מוקצות לאירועים מעבר לזמין.\nהמלאי יוצג כחסר.\n\nלהמשיך בכל זאת?'))return;
+      var choice=confirm(
+        '⚠️ שים לב!\n\n'+
+        'לאחר העדכון: '+used+' יחידות מוקצות לאירועים\n'+
+        'אבל רק '+(q-qBroken)+' זמינות ('+q+' כוללות פחות '+qBroken+' לא תקינים)\n\n'+
+        'לחצי אישור כדי לעדכן ידנית באירועים\n'+
+        'לחצי ביטול לחזרה'
+      );
+      if(!choice)return;
     }
   }
 
