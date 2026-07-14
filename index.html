@@ -3350,15 +3350,23 @@ function openEquipViewItem(idx){
 }
 function updateEviAvail(){var q=parseInt($$('evi-q')&&$$('evi-q').value)||0;var b=parseInt($$('evi-broken')&&$$('evi-broken').value)||0;if($$('evi-avail'))$$('evi-avail').textContent='זמינים: '+Math.max(0,q-b);}
 function saveEquipViewItem(){
+function saveEquipViewItem(){
   var n=$$('evi-n').value.trim();if(!n)return;
-  var obj={n,q:parseInt($$('evi-q').value)||1,qBroken:parseInt($$('evi-broken').value)||0,loc:$$('evi-loc').value.trim(),note:$$('evi-note').value.trim()};
+  var obj={
+    n:n,
+    q:parseInt($$('evi-q').value)||1,
+    qBroken:parseInt($$('evi-broken').value)||0,
+    loc:$$('evi-loc').value.trim(),
+    note:$$('evi-note').value.trim()
+  };
+  var editIdx=_evItemIdx;
+  $$('ovl-ev-item').remove();
   saveEquipViewData(function(kb){
     var list=Array.isArray(kb.gequip)?kb.gequip:Object.values(kb.gequip||{});
-    if(_evItemIdx!==null){Object.assign(list[_evItemIdx],obj);}
+    if(editIdx!==null){Object.assign(list[editIdx],obj);}
     else{obj.id=Date.now();list.push(obj);}
     kb.gequip=list;
   });
-  $$('ovl-ev-item').remove();
 }
 function deleteEquipViewItem(idx){
   if(!confirm('למחוק פריט?'))return;
@@ -3394,13 +3402,14 @@ function openEquipViewPurchase(idx){
 }
 function saveEquipViewPurchase(){
   var n=$$('evp-n').value.trim();if(!n)return;
-  var obj={n,q:parseInt($$('evp-q').value)||1,note:$$('evp-note').value.trim()};
+  var obj={n:n,q:parseInt($$('evp-q').value)||1,note:$$('evp-note').value.trim()};
+  var editIdx=_evPurIdx;
+  $$('ovl-ev-pur').remove();
   saveEquipViewData(function(kb){
     var list=Array.isArray(kb.purchaseList)?kb.purchaseList:Object.values(kb.purchaseList||[]);
-    if(_evPurIdx!==null)list[_evPurIdx]=obj;else list.push(obj);
+    if(editIdx!==null)list[editIdx]=obj;else list.push(obj);
     kb.purchaseList=list;
   });
-  $$('ovl-ev-pur').remove();
 }
 function deleteEquipViewPurchase(idx){
   if(!confirm('למחוק?'))return;
