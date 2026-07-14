@@ -1100,18 +1100,38 @@ if(new URLSearchParams(window.location.search).get('mode')==='vol'){
 
 <!-- דף ציוד ציבורי - מחוץ ל-vol-page -->
 </div>
-<div id="equip-view-page" style="display:none;min-height:100vh;background:var(--bg);direction:rtl;padding:16px;max-width:600px;margin:0 auto">
-  <div style="text-align:center;padding:20px 0 16px;border-bottom:1px solid var(--bdr);margin-bottom:16px">
-    <i class="ti ti-building-community" style="font-size:32px;color:var(--teal)"></i>
-    <div style="font-size:18px;font-weight:700;margin-top:8px">מחסן ציוד</div>
-    <div style="font-size:12px;color:var(--txt2);margin-top:4px" id="equip-view-updated"></div>
+<div id="equip-view-page" style="display:none;min-height:100vh;background:var(--bg);direction:rtl">
+
+  <!-- TOPBAR -->
+  <div style="background:var(--teal);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10">
+    <div style="display:flex;align-items:center;gap:8px">
+      <i class="ti ti-building-community" style="font-size:18px"></i>
+      <span style="font-size:15px;font-weight:600">מחסן ציוד</span>
+    </div>
+    <div style="font-size:11px;opacity:.8" id="equip-view-updated"></div>
   </div>
 
-  <div style="font-size:13px;font-weight:600;margin-bottom:10px">מלאי ציוד</div>
-  <div id="equip-view-list" style="margin-bottom:20px"></div>
+  <div style="max-width:600px;margin:0 auto;padding:14px">
 
-  <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--co)"><i class="ti ti-shopping-cart"></i> רשימת רכש</div>
-  <div id="equip-view-purchase"></div>
+    <!-- רשימת רכש -->
+    <div class="card" style="margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:12px;font-weight:600"><i class="ti ti-shopping-cart" style="color:var(--co)"></i> רשימת רכש</div>
+        <button class="btn bsm bp" onclick="openEquipViewPurchase(null)"><i class="ti ti-plus"></i> הוסף</button>
+      </div>
+      <div id="equip-view-purchase"></div>
+    </div>
+
+    <!-- מלאי -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:12px;font-weight:600">מלאי ציוד</div>
+        <button class="btn bsm bp" onclick="openEquipViewItem(null)"><i class="ti ti-plus"></i> הוסף פריט</button>
+      </div>
+      <div id="equip-view-list"></div>
+    </div>
+
+  </div>
 </div>
 
 <div id="vol-page" style="display:none;min-height:100vh;background:var(--bg);direction:rtl">
@@ -3232,46 +3252,168 @@ function shareEquipLink(){
   navigator.clipboard.writeText(url).then(()=>alert('קישור הועתק! ✅')).catch(()=>{prompt('העתיקי את הקישור:',url);});
 }
 
+var _equipViewKbId='kb0';
+
 function showEquipPage(kbId){
+  _equipViewKbId=kbId||'kb0';
   document.body.classList.add('equip-mode');
   $$('equip-view-page').style.display='block';
   $$('fb-loading').style.display='none';
-  $$('equip-view-updated').textContent='עודכן: '+new Date().toLocaleDateString('he-IL',{day:'numeric',month:'long',year:'numeric'});
+  $$('equip-view-updated').textContent='עודכן: '+new Date().toLocaleDateString('he-IL');
+  loadEquipViewData();
+}
 
-  db.ref('kibbutz/main').once('value').then(function(snap){
-    var d=snap.val();if(!d||!d.kbData||!d.kbData[kbId])return;
-    var kb=d.kbData[kbId];
+function loadEquipViewData(){
+  db.ref('kibbutz/main/kbData/'+_equipViewKbId).once('value').then(function(snap){
+    var kb=snap.val()||{};
     function toArr(v){if(!v)return[];if(Array.isArray(v))return v;return Object.values(v);}
     var gequip=toArr(kb.gequip);
     var events=toArr(kb.events);
     var purchaseList=toArr(kb.purchaseList);
 
+    // מלאי
     var listEl=$$('equip-view-list');
-    if(!gequip.length){listEl.innerHTML='<div style="font-size:12px;color:var(--txt2)">אין פריטים במלאי</div>';}
-    else{
-      listEl.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:12px">'
-        +'<tr style="background:var(--sur);font-weight:600"><td style="padding:8px">פריט</td><td style="padding:8px;text-align:center">סה"כ</td><td style="padding:8px;text-align:center;color:var(--ct)">לא תקינים</td><td style="padding:8px;text-align:center;color:var(--tt)">זמינים</td><td style="padding:8px">מיקום</td></tr>'
-        +gequip.map(function(g,i){
-          var used=events.reduce(function(s,e){return s+toArr(e.equip).filter(function(q){return q.gid===g.id;}).reduce(function(ss,q){return ss+q.qty;},0);},0);
-          var broken=g.qBroken||0;var avail=Math.max(0,g.q-broken-used);
-          return '<tr style="background:'+(i%2===0?'var(--bg)':'var(--sur)')+'">'
-            +'<td style="padding:8px;font-weight:500">'+g.n+'</td>'
-            +'<td style="padding:8px;text-align:center">'+g.q+'</td>'
-            +'<td style="padding:8px;text-align:center;color:'+(broken>0?'var(--ct)':'var(--txt2)')+'">'+broken+'</td>'
-            +'<td style="padding:8px;text-align:center;font-weight:600;color:'+(avail>0?'var(--tt)':'var(--ct)')+'">'+avail+'</td>'
-            +'<td style="padding:8px;color:var(--txt2)">'+(g.loc||'–')+'</td></tr>';
-        }).join('')+'</table>';
-    }
-
-    var purEl=$$('equip-view-purchase');
-    if(!purchaseList.length){purEl.innerHTML='<div style="font-size:12px;color:var(--txt2)">אין פריטים לרכישה</div>';}
-    else{purEl.innerHTML=purchaseList.map(function(p){
-      return '<div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px solid var(--bdr)">'
-        +'<span style="flex:1;font-size:12px">'+p.n+'</span>'
-        +'<span style="font-size:12px;color:var(--txt2)">'+p.q+' יח\'</span>'
-        +(p.note?'<span style="font-size:11px;color:var(--txt2)">'+p.note+'</span>':'')
+    if(!gequip.length){listEl.innerHTML='<div style="font-size:12px;color:var(--txt2);text-align:center;padding:8px">אין פריטים</div>';}
+    else{listEl.innerHTML=gequip.map(function(g,i){
+      var used=events.reduce(function(s,e){return s+toArr(e.equip).filter(function(q){return q.gid===g.id;}).reduce(function(ss,q){return ss+q.qty;},0);},0);
+      var broken=g.qBroken||0;var avail=g.q-broken-used;
+      return '<div class="row">'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:12px;font-weight:600">'+g.n+'</div>'
+        +'<div style="font-size:11px;color:var(--txt2)">סה"כ: '+g.q+(broken>0?' · <span style="color:var(--ct)">'+broken+' לא תקינים</span>':'')+' · זמין: <span style="color:'+(avail<0?'var(--ct)':'var(--tt)')+'">'+avail+'</span>'+(g.loc?' · 📍 '+g.loc:'')+'</div>'
+        +(g.note?'<div style="font-size:10px;color:var(--txt2)">'+g.note+'</div>':'')
+        +'</div>'
+        +'<button class="ib" onclick="openEquipViewItem('+i+')"><i class="ti ti-edit"></i></button>'
+        +'<button class="ib del" onclick="deleteEquipViewItem('+i+')"><i class="ti ti-trash"></i></button>'
         +'</div>';
     }).join('');}
+
+    // רשימת רכש
+    var purEl=$$('equip-view-purchase');
+    if(!purchaseList.length){purEl.innerHTML='<div style="font-size:12px;color:var(--txt2);text-align:center;padding:8px">אין פריטים לרכישה</div>';}
+    else{purEl.innerHTML=purchaseList.map(function(p,i){
+      return '<div class="row">'
+        +'<div style="flex:1"><div style="font-size:12px">'+p.n+'</div>'+(p.note?'<div style="font-size:10px;color:var(--txt2)">'+p.note+'</div>':'')+'</div>'
+        +'<span style="font-size:11px;color:var(--txt2)">'+p.q+' יח\'</span>'
+        +'<button class="btn bsm" style="background:var(--tl);border-color:var(--teal);color:var(--tt);font-size:11px" onclick="equipViewPurchaseToStock('+i+')">✅ נרכש</button>'
+        +'<button class="ib" onclick="openEquipViewPurchase('+i+')"><i class="ti ti-edit"></i></button>'
+        +'<button class="ib del" onclick="deleteEquipViewPurchase('+i+')"><i class="ti ti-trash"></i></button>'
+        +'</div>';
+    }).join('');}
+  });
+}
+
+function saveEquipViewData(callback){
+  db.ref('kibbutz/main/kbData/'+_equipViewKbId).once('value').then(function(snap){
+    var kb=snap.val()||{};
+    if(callback)callback(kb);
+    db.ref('kibbutz/main/kbData/'+_equipViewKbId).set(kb).then(loadEquipViewData);
+  });
+}
+
+// ── מלאי ──
+var _evItemIdx=null;
+function openEquipViewItem(idx){
+  _evItemIdx=idx;
+  var title=idx===null?'הוסף פריט':'ערוך פריט';
+  var item=idx!==null?null:null;
+  // בנה מודאל דינמי
+  var existing=$$('ovl-ev-item');if(existing)existing.remove();
+  var m=document.createElement('div');m.id='ovl-ev-item';m.className='ovl open';
+  m.innerHTML='<div class="mod" style="max-width:360px">'
+    +'<div class="mhd"><span class="mtt">'+title+'</span><button class="xb" onclick="document.getElementById(\'ovl-ev-item\').remove()">×</button></div>'
+    +'<div class="frow"><label class="fl">שם הפריט</label><input type="text" id="evi-n"></div>'
+    +'<div class="frow"><label class="fl">כמות כוללת</label><input type="number" id="evi-q" value="1" min="1" oninput="updateEviAvail()"></div>'
+    +'<div class="frow"><label class="fl">מתוכם לא תקינים</label><input type="number" id="evi-broken" value="0" min="0" oninput="updateEviAvail()"><div style="font-size:10px;color:var(--txt2);margin-top:3px" id="evi-avail">זמינים: 1</div></div>'
+    +'<div class="frow"><label class="fl">מיקום</label><input type="text" id="evi-loc" placeholder="מחסן א..."></div>'
+    +'<div class="frow"><label class="fl">הערות</label><input type="text" id="evi-note"></div>'
+    +'<div style="display:flex;gap:6px;justify-content:flex-end;margin-top:8px">'
+    +'<button class="btn" onclick="document.getElementById(\'ovl-ev-item\').remove()">ביטול</button>'
+    +'<button class="btn bp" onclick="saveEquipViewItem()"><i class="ti ti-check"></i> שמור</button>'
+    +'</div></div>';
+  document.body.appendChild(m);
+  // אם עריכה – טען נתונים
+  if(idx!==null){
+    db.ref('kibbutz/main/kbData/'+_equipViewKbId+'/gequip').once('value').then(function(snap){
+      var arr=snap.val();var list=Array.isArray(arr)?arr:Object.values(arr||{});
+      var g=list[idx];if(!g)return;
+      $$('evi-n').value=g.n;$$('evi-q').value=g.q;$$('evi-broken').value=g.qBroken||0;
+      $$('evi-loc').value=g.loc||'';$$('evi-note').value=g.note||'';updateEviAvail();
+    });
+  }
+}
+function updateEviAvail(){var q=parseInt($$('evi-q')&&$$('evi-q').value)||0;var b=parseInt($$('evi-broken')&&$$('evi-broken').value)||0;if($$('evi-avail'))$$('evi-avail').textContent='זמינים: '+Math.max(0,q-b);}
+function saveEquipViewItem(){
+  var n=$$('evi-n').value.trim();if(!n)return;
+  var obj={n,q:parseInt($$('evi-q').value)||1,qBroken:parseInt($$('evi-broken').value)||0,loc:$$('evi-loc').value.trim(),note:$$('evi-note').value.trim()};
+  saveEquipViewData(function(kb){
+    var list=Array.isArray(kb.gequip)?kb.gequip:Object.values(kb.gequip||{});
+    if(_evItemIdx!==null){Object.assign(list[_evItemIdx],obj);}
+    else{obj.id=Date.now();list.push(obj);}
+    kb.gequip=list;
+  });
+  $$('ovl-ev-item').remove();
+}
+function deleteEquipViewItem(idx){
+  if(!confirm('למחוק פריט?'))return;
+  saveEquipViewData(function(kb){
+    var list=Array.isArray(kb.gequip)?kb.gequip:Object.values(kb.gequip||{});
+    list.splice(idx,1);kb.gequip=list;
+  });
+}
+
+// ── רשימת רכש ──
+var _evPurIdx=null;
+function openEquipViewPurchase(idx){
+  _evPurIdx=idx;
+  var existing=$$('ovl-ev-pur');if(existing)existing.remove();
+  var m=document.createElement('div');m.id='ovl-ev-pur';m.className='ovl open';
+  m.innerHTML='<div class="mod" style="max-width:340px">'
+    +'<div class="mhd"><span class="mtt">'+(idx===null?'הוסף לרכש':'ערוך')+'</span><button class="xb" onclick="document.getElementById(\'ovl-ev-pur\').remove()">×</button></div>'
+    +'<div class="frow"><label class="fl">פריט</label><input type="text" id="evp-n"></div>'
+    +'<div class="frow"><label class="fl">כמות</label><input type="number" id="evp-q" value="1" min="1"></div>'
+    +'<div class="frow"><label class="fl">הערה</label><input type="text" id="evp-note"></div>'
+    +'<div style="display:flex;gap:6px;justify-content:flex-end;margin-top:8px">'
+    +'<button class="btn" onclick="document.getElementById(\'ovl-ev-pur\').remove()">ביטול</button>'
+    +'<button class="btn bp" onclick="saveEquipViewPurchase()"><i class="ti ti-check"></i> שמור</button>'
+    +'</div></div>';
+  document.body.appendChild(m);
+  if(idx!==null){
+    db.ref('kibbutz/main/kbData/'+_equipViewKbId+'/purchaseList').once('value').then(function(snap){
+      var arr=snap.val();var list=Array.isArray(arr)?arr:Object.values(arr||{});
+      var p=list[idx];if(!p)return;
+      $$('evp-n').value=p.n;$$('evp-q').value=p.q;$$('evp-note').value=p.note||'';
+    });
+  }
+}
+function saveEquipViewPurchase(){
+  var n=$$('evp-n').value.trim();if(!n)return;
+  var obj={n,q:parseInt($$('evp-q').value)||1,note:$$('evp-note').value.trim()};
+  saveEquipViewData(function(kb){
+    var list=Array.isArray(kb.purchaseList)?kb.purchaseList:Object.values(kb.purchaseList||[]);
+    if(_evPurIdx!==null)list[_evPurIdx]=obj;else list.push(obj);
+    kb.purchaseList=list;
+  });
+  $$('ovl-ev-pur').remove();
+}
+function deleteEquipViewPurchase(idx){
+  if(!confirm('למחוק?'))return;
+  saveEquipViewData(function(kb){
+    var list=Array.isArray(kb.purchaseList)?kb.purchaseList:Object.values(kb.purchaseList||[]);
+    list.splice(idx,1);kb.purchaseList=list;
+  });
+}
+function equipViewPurchaseToStock(idx){
+  db.ref('kibbutz/main/kbData/'+_equipViewKbId+'/purchaseList').once('value').then(function(snap){
+    var arr=snap.val();var list=Array.isArray(arr)?arr:Object.values(arr||{});
+    var p=list[idx];if(!p||!confirm('להעביר "'+p.n+'" למלאי?'))return;
+    saveEquipViewData(function(kb){
+      var gl=Array.isArray(kb.gequip)?kb.gequip:Object.values(kb.gequip||{});
+      gl.push({id:Date.now(),n:p.n,q:p.q,qBroken:0,loc:'',note:''});
+      kb.gequip=gl;
+      var pl=Array.isArray(kb.purchaseList)?kb.purchaseList:Object.values(kb.purchaseList||[]);
+      pl.splice(idx,1);kb.purchaseList=pl;
+    });
   });
 }
 
