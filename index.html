@@ -3308,13 +3308,12 @@ function saveEquipViewData(callback){
     var kb=snap.val()||{};
     if(!kb.gequip)kb.gequip=[];
     if(!kb.purchaseList)kb.purchaseList=[];
-    // המר objects לarrays אם צריך
     if(!Array.isArray(kb.gequip))kb.gequip=Object.values(kb.gequip);
     if(!Array.isArray(kb.purchaseList))kb.purchaseList=Object.values(kb.purchaseList);
     if(callback)callback(kb);
-    db.ref('kibbutz/main/kbData/'+_equipViewKbId+'/gequip').set(kb.gequip);
-    db.ref('kibbutz/main/kbData/'+_equipViewKbId+'/purchaseList').set(kb.purchaseList);
-    setTimeout(loadEquipViewData, 500);
+    var p1=db.ref('kibbutz/main/kbData/'+_equipViewKbId+'/gequip').set(kb.gequip);
+    var p2=db.ref('kibbutz/main/kbData/'+_equipViewKbId+'/purchaseList').set(kb.purchaseList);
+    Promise.all([p1,p2]).then(function(){loadEquipViewData();});
   });
 }
 
