@@ -1098,7 +1098,8 @@ if(new URLSearchParams(window.location.search).get('mode')==='vol'){
 
 <div id="vol-page" style="display:none;min-height:100vh;background:var(--bg);direction:rtl">
 
-<!-- דף ציוד ציבורי -->
+<!-- דף ציוד ציבורי - מחוץ ל-vol-page -->
+</div>
 <div id="equip-view-page" style="display:none;min-height:100vh;background:var(--bg);direction:rtl;padding:16px;max-width:600px;margin:0 auto">
   <div style="text-align:center;padding:20px 0 16px;border-bottom:1px solid var(--bdr);margin-bottom:16px">
     <i class="ti ti-building-community" style="font-size:32px;color:var(--teal)"></i>
@@ -1112,6 +1113,8 @@ if(new URLSearchParams(window.location.search).get('mode')==='vol'){
   <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--co)"><i class="ti ti-shopping-cart"></i> רשימת רכש</div>
   <div id="equip-view-purchase"></div>
 </div>
+
+<div id="vol-page" style="display:none;min-height:100vh;background:var(--bg);direction:rtl">
   <div style="background:var(--td);color:#fff;padding:14px 18px;display:flex;align-items:center;gap:10px">
     <i class="ti ti-building-community" style="font-size:18px"></i>
     <span id="vp-kb-name" style="font-size:15px;font-weight:600"></span>
@@ -3225,7 +3228,7 @@ function rPurchase(){
 
 function shareEquipLink(){
   var url=window.location.href.split('?')[0]+'?mode=equip&kb='+CKB;
-  navigator.clipboard.writeText(url).then(()=>alert('קישור הועתק! ✅\n\nשלחי למחסנאי – הוא יוכל לראות את המלאי בכל מכשיר.')).catch(()=>{prompt('העתיקי את הקישור:',url);});
+  navigator.clipboard.writeText(url).then(()=>alert('קישור הועתק! ✅')).catch(()=>{prompt('העתיקי את הקישור:',url);});
 }
 
 function showEquipPage(kbId){
