@@ -222,11 +222,13 @@ textarea{resize:vertical}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-// הסתר מסך כניסה מיידית אם זה דף גיוס
-if(new URLSearchParams(window.location.search).get('mode')==='vol'){
+// הסתר מסך כניסה מיידית אם זה דף גיוס או מחסן
+if(['vol','equip'].includes(new URLSearchParams(window.location.search).get('mode'))){
   document.addEventListener('DOMContentLoaded',function(){
     var ls=document.getElementById('login-screen');
     if(ls)ls.style.display='none';
+    var fl=document.getElementById('fb-loading');
+    if(fl)fl.style.display='none';
   });
 }
 </script>
