@@ -23,6 +23,7 @@ button{touch-action:manipulation;cursor:pointer}
 body{background:var(--bg);color:var(--txt);direction:rtl;min-height:100vh;padding-bottom:var(--nav-h)}
 body.vol-mode .topbar,body.vol-mode .bottomnav,body.vol-mode .main,body.vol-mode .topnav{display:none!important}
 body.equip-mode .topbar,body.equip-mode .bottomnav,body.equip-mode .main,body.equip-mode .topnav{display:none!important}
+body.equip-mode #fb-loading,body.vol-mode #fb-loading,body.equip-mode #login-screen,body.vol-mode #login-screen{display:none!important}
 
 /* ── TOPBAR ── */
 .topbar{background:var(--topbar);color:#fff;padding:11px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
@@ -311,7 +312,7 @@ textarea{resize:vertical}
   </div>
 </div>
 
-<div id="fb-loading" style="position:fixed;inset:0;background:#fff;z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+<div id="fb-loading" style="position:fixed;inset:0;background:#fff;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
   <div style="width:48px;height:48px;border:4px solid #e2e0d8;border-top-color:#2A9D8F;border-radius:50%;animation:spin 1s linear infinite"></div>
   <div style="font-size:14px;color:#7A7870;font-family:sans-serif">מתחבר לענן...</div>
 </div>
@@ -1606,8 +1607,6 @@ function fixFirebaseArrays(d){
 }
 
 function showLoading(on){
-  var mode=new URLSearchParams(window.location.search).get('mode');
-  if(mode==='equip'||mode==='vol')return;
   var el=$$('fb-loading');
   if(el)el.style.display=on?'flex':'none';
 }
@@ -3946,6 +3945,7 @@ document.addEventListener('DOMContentLoaded',function(){
   }catch(e){localStorage.removeItem(STORAGE_KEY);}
   var p=new URLSearchParams(window.location.search);
   if(p.get('mode')==='equip'){
+    document.body.classList.add('equip-mode');
     var ls=$$('login-screen');if(ls)ls.style.display='none';
     // המתן לאתחול Firebase
     if(typeof firebase!=='undefined'&&firebase.apps&&firebase.apps.length){
