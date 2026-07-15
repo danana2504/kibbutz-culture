@@ -222,15 +222,21 @@ textarea{resize:vertical}
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-// הסתר מסך כניסה מיידית אם זה דף גיוס או מחסן
-if(['vol','equip'].includes(new URLSearchParams(window.location.search).get('mode'))){
-  document.addEventListener('DOMContentLoaded',function(){
-    var ls=document.getElementById('login-screen');
-    if(ls)ls.style.display='none';
-    var fl=document.getElementById('fb-loading');
-    if(fl)fl.style.display='none';
-  });
-}
+// הסתר מסכים מיידית אם זה דף גיוס או מחסן
+(function(){
+  var mode=new URLSearchParams(window.location.search).get('mode');
+  if(mode==='vol'||mode==='equip'){
+    document.addEventListener('DOMContentLoaded',function(){
+      ['login-screen','fb-loading'].forEach(function(id){
+        var el=document.getElementById(id);if(el)el.style.display='none';
+      });
+    });
+    // הוסף style מיידי לפני DOM
+    var s=document.createElement('style');
+    s.textContent='#fb-loading,#login-screen{display:none!important}';
+    document.head&&document.head.appendChild(s)||(document.addEventListener('DOMContentLoaded',function(){document.head.appendChild(s);}));
+  }
+})();
 </script>
 </head>
 <body>
