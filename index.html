@@ -1378,9 +1378,9 @@ var auth;
 
 function initAuth(){
   auth=firebase.auth();
-  var isVolMode=new URLSearchParams(window.location.search).get('mode')==='vol';
+  var mode=new URLSearchParams(window.location.search).get('mode');
   auth.onAuthStateChanged(function(user){
-    if(isVolMode) return; // דף גיוס – לא דורש auth
+    if(mode==='vol'||mode==='equip') return; // דפים ציבוריים – לא דורשים auth
     if(user){
       $$('login-screen').style.display='none';
       if(!localStorage.getItem(BIOMETRIC_KEY)&&window.PublicKeyCredential){
@@ -3938,7 +3938,19 @@ document.addEventListener('DOMContentLoaded',function(){
   var p=new URLSearchParams(window.location.search);
   if(p.get('mode')==='equip'){
     var ls=$$('login-screen');if(ls)ls.style.display='none';
-    showEquipPage(p.get('kb')||'kb0');
+    var fl=$$('fb-loading');if(fl)fl.style.display='none';
+    // המתן לאתחול Firebase
+    if(typeof firebase!=='undefined'&&firebase.apps&&firebase.apps.length){
+      showEquipPage(p.get('kb')||'kb0');
+    } else {
+      // Firebase עדיין לא מאותחל – המתן
+      var checkFB=setInterval(function(){
+        if(typeof firebase!=='undefined'&&firebase.apps&&firebase.apps.length){
+          clearInterval(checkFB);
+          showEquipPage(p.get('kb')||'kb0');
+        }
+      },100);
+    }
   } else if(p.get('mode')==='vol'){
     // הסתר מסך כניסה מיד
     var ls=$$('login-screen');if(ls)ls.style.display='none';
