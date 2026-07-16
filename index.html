@@ -323,6 +323,7 @@ textarea{resize:vertical}
 </div>
 
 <div id="fb-loading" style="position:fixed;inset:0;background:#fff;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+  <script>if(new URLSearchParams(location.search).get('mode')==='equip')document.currentScript.parentElement.style.display='none';</script>
   <div style="width:48px;height:48px;border:4px solid #e2e0d8;border-top-color:#2A9D8F;border-radius:50%;animation:spin 1s linear infinite"></div>
   <div style="font-size:14px;color:#7A7870;font-family:sans-serif">מתחבר לענן...</div>
 </div>
