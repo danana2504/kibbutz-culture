@@ -219,6 +219,16 @@ textarea{resize:vertical}
 @media(max-width:360px){.bnb-label{display:none}.bnb{min-width:40px}}
 </style>
 <!-- Firebase SDK -->
+<!-- הסתרה מיידית לdפי גיוס/מחסן -->
+<style id="mode-hide-style"></style>
+<script>
+(function(){
+  var mode=new URLSearchParams(window.location.search).get('mode');
+  if(mode==='vol'||mode==='equip'){
+    document.getElementById('mode-hide-style').textContent='#fb-loading,#login-screen{display:none!important}';
+  }
+})();
+</script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
