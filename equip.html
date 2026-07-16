@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מחסן ציוד</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#F5F4F0;color:#2C2B27;direction:rtl}
+.topbar{background:#2A9D8F;color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.topbar-title{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+.updated{font-size:11px;opacity:.8}
+.main{max-width:600px;margin:0 auto;padding:14px}
+.card{background:#fff;border-radius:10px;padding:14px;margin-bottom:12px;border:1px solid #E2E0D8}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.card-title{font-size:13px;font-weight:600}
+.row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #F5F4F0}
+.row:last-child{border-bottom:none}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:6px;border:1px solid #E2E0D8;background:#fff;cursor:pointer;font-size:12px;font-family:inherit}
+.btn-primary{background:#2A9D8F;border-color:#2A9D8F;color:#fff}
+.btn-sm{padding:4px 8px;font-size:11px}
+.btn-danger{background:#fff;border-color:#E2E0D8;color:#C9622A}
+.btn-success{background:#EAF6F5;border-color:#2A9D8F;color:#2A9D8F}
+.ib{background:none;border:none;cursor:pointer;color:#7A7870;padding:4px;border-radius:4px;font-size:14px}
+.ib:hover{background:#F5F4F0}
+.ovl{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center;padding:16px}
+.ovl.open{display:flex}
+.mod{background:#fff;border-radius:12px;padding:20px;width:100%;max-width:380px;max-height:90vh;overflow-y:auto}
+.mhd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.mtt{font-size:15px;font-weight:600}
+.xb{background:none;border:none;font-size:20px;cursor:pointer;color:#7A7870;line-height:1}
+.frow{margin-bottom:10px}
+.fl{display:block;font-size:12px;color:#7A7870;margin-bottom:4px}
+input,select,textarea{width:100%;padding:8px 10px;border:1px solid #E2E0D8;border-radius:6px;font-size:13px;font-family:inherit;direction:rtl}
+.tag-ok{background:#EAF6F5;color:#1F7A6E;border-radius:20px;padding:2px 8px;font-size:10px}
+.tag-warn{background:#FEF3E2;color:#E76F1A;border-radius:20px;padding:2px 8px;font-size:10px}
+.empty{text-align:center;padding:16px;font-size:12px;color:#7A7870}
+.avail-ok{color:#1F7A6E;font-weight:600}
+.avail-bad{color:#C9622A;font-weight:600}
+#loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:12px;color:#7A7870;font-size:14px}
+.spinner{width:36px;height:36px;border:3px solid #E2E0D8;border-top-color:#2A9D8F;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-title"><i class="ti ti-tool"></i> מחסן ציוד</div>
+  <div class="updated" id="updated"></div>
+</div>
+
+<div class="main">
+  <div id="loading"><div class="spinner"></div>טוען נתונים...</div>
+  <div id="content" style="display:none">
+
+    <!-- רשימת רכש -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="ti ti-shopping-cart" style="color:#E76F1A"></i> רשימת רכש</div>
+        <button class="btn btn-primary btn-sm" onclick="openPurchaseModal(null)"><i class="ti ti-plus"></i> הוסף</button>
+      </div>
+      <div id="purchase-list"><div class="empty">אין פריטים לרכישה</div></div>
+    </div>
+
+    <!-- מלאי -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="ti ti-package"></i> מלאי ציוד</div>
+        <button class="btn btn-primary btn-sm" onclick="openItemModal(null)"><i class="ti ti-plus"></i> הוסף פריט</button>
+      </div>
+      <div id="equip-list"><div class="empty">אין פריטים</div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- מודאל פריט -->
+<div class="ovl" id="ovl-item">
+<div class="mod">
+  <div class="mhd"><span class="mtt" id="item-title">פריט חדש</span><button class="xb" onclick="closeModal('ovl-item')">×</button></div>
+  <div class="frow"><label class="fl">שם הפריט</label><input type="text" id="item-n"></div>
+  <div class="frow"><label class="fl">כמות כוללת</label><input type="number" id="item-q" value="1" min="1" oninput="updateAvail()"></div>
+  <div class="frow"><label class="fl">מתוכם לא תקינים</label><input type="number" id="item-broken" value="0" min="0" oninput="updateAvail()"><div style="font-size:10px;color:#7A7870;margin-top:3px" id="item-avail">זמינים: 1</div></div>
+  <div class="frow"><label class="fl">מיקום</label><input type="text" id="item-loc" placeholder="מחסן א..."></div>
+  <div class="frow"><label class="fl">הערות</label><input type="text" id="item-note"></div>
+  <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:12px">
+    <button class="btn btn-danger btn-sm" id="item-del" style="display:none;margin-left:auto" onclick="deleteItem()"><i class="ti ti-trash"></i></button>
+    <button class="btn" onclick="closeModal('ovl-item')">ביטול</button>
+    <button class="btn btn-primary" onclick="saveItem()"><i class="ti ti-check"></i> שמור</button>
+  </div>
+</div>
+</div>
+
+<!-- מודאל רכש -->
+<div class="ovl" id="ovl-pur">
+<div class="mod">
+  <div class="mhd"><span class="mtt" id="pur-title">הוסף לרכש</span><button class="xb" onclick="closeModal('ovl-pur')">×</button></div>
+  <div class="frow"><label class="fl">פריט</label><input type="text" id="pur-n" placeholder="מיקרופון, שולחן..."></div>
+  <div class="frow"><label class="fl">כמות</label><input type="number" id="pur-q" value="1" min="1"></div>
+  <div class="frow"><label class="fl">הערה</label><input type="text" id="pur-note" placeholder="סיבה, דחיפות..."></div>
+  <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:12px">
+    <button class="btn btn-danger btn-sm" id="pur-del" style="display:none;margin-left:auto" onclick="deletePurchase()"><i class="ti ti-trash"></i></button>
+    <button class="btn" onclick="closeModal('ovl-pur')">ביטול</button>
+    <button class="btn btn-primary" onclick="savePurchase()"><i class="ti ti-check"></i> שמור</button>
+  </div>
+</div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+var firebaseConfig={
+  apiKey:"AIzaSyCZkJigKstL1NZHHJ0NqbtR3yLImOUIybs",
+  authDomain:"kibbutz-culture.firebaseapp.com",
+  databaseURL:"https://kibbutz-culture-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"kibbutz-culture"
+};
+firebase.initializeApp(firebaseConfig);
+var db=firebase.database();
+var kbId=new URLSearchParams(location.search).get('kb')||'kb0';
+var KB_PATH='kibbutz/main/kbData/'+kbId;
+
+var _gequip=[];var _events=[];var _purchaseList=[];
+var _editItemIdx=null;var _editPurIdx=null;
+
+function toArr(v){if(!v)return[];if(Array.isArray(v))return v;return Object.values(v);}
+
+function load(){
+  db.ref(KB_PATH).once('value').then(function(snap){
+    var kb=snap.val()||{};
+    _gequip=toArr(kb.gequip);
+    _events=toArr(kb.events);
+    _purchaseList=toArr(kb.purchaseList);
+    document.getElementById('loading').style.display='none';
+    document.getElementById('content').style.display='block';
+    document.getElementById('updated').textContent='עודכן: '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+    renderAll();
+  });
+}
+
+function renderAll(){renderEquip();renderPurchase();}
+
+function renderEquip(){
+  var el=document.getElementById('equip-list');
+  if(!_gequip.length){el.innerHTML='<div class="empty">אין פריטים</div>';return;}
+  el.innerHTML=_gequip.map(function(g,i){
+    var used=_events.reduce(function(s,e){return s+toArr(e.equip).filter(function(q){return q.gid===g.id;}).reduce(function(ss,q){return ss+q.qty;},0);},0);
+    var broken=g.qBroken||0;var avail=g.q-broken-used;
+    return '<div class="row">'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="font-size:13px;font-weight:600">'+g.n+'</div>'
+      +'<div style="font-size:11px;color:#7A7870">סה"כ: '+g.q+(broken>0?' · <span style="color:#C9622A">'+broken+' לא תקינים</span>':'')+' · זמין: <span class="'+(avail<0?'avail-bad':'avail-ok')+'">'+avail+'</span>'+(g.loc?' · 📍 '+g.loc:'')+'</div>'
+      +(g.note?'<div style="font-size:10px;color:#7A7870">'+g.note+'</div>':'')
+      +'</div>'
+      +'<button class="ib" onclick="openItemModal('+i+')"><i class="ti ti-edit"></i></button>'
+      +'<button class="ib" onclick="deleteItemAt('+i+')" style="color:#C9622A"><i class="ti ti-trash"></i></button>'
+      +'</div>';
+  }).join('');
+}
+
+function renderPurchase(){
+  var el=document.getElementById('purchase-list');
+  if(!_purchaseList.length){el.innerHTML='<div class="empty">אין פריטים לרכישה</div>';return;}
+  el.innerHTML=_purchaseList.map(function(p,i){
+    return '<div class="row">'
+      +'<div style="flex:1"><div style="font-size:13px">'+p.n+'</div>'+(p.note?'<div style="font-size:11px;color:#7A7870">'+p.note+'</div>':'')+'</div>'
+      +'<span style="font-size:12px;color:#7A7870;margin:0 4px">'+p.q+' יח\'</span>'
+      +'<button class="btn btn-success btn-sm" onclick="purchaseToStock('+i+')">✅ נרכש</button>'
+      +'<button class="ib" onclick="openPurchaseModal('+i+')"><i class="ti ti-edit"></i></button>'
+      +'<button class="ib" onclick="deletePurchaseAt('+i+')" style="color:#C9622A"><i class="ti ti-trash"></i></button>'
+      +'</div>';
+  }).join('');
+}
+
+function save(callback){
+  if(callback)callback();
+  db.ref(KB_PATH+'/gequip').set(_gequip);
+  db.ref(KB_PATH+'/purchaseList').set(_purchaseList);
+  renderAll();
+}
+
+// ── מלאי ──
+function openItemModal(idx){
+  _editItemIdx=idx;
+  document.getElementById('item-title').textContent=idx===null?'פריט חדש':'עריכת פריט';
+  document.getElementById('item-del').style.display=idx!==null?'inline-flex':'none';
+  var g=idx!==null?_gequip[idx]:{};
+  document.getElementById('item-n').value=g.n||'';
+  document.getElementById('item-q').value=g.q||1;
+  document.getElementById('item-broken').value=g.qBroken||0;
+  document.getElementById('item-loc').value=g.loc||'';
+  document.getElementById('item-note').value=g.note||'';
+  updateAvail();
+  document.getElementById('ovl-item').classList.add('open');
+}
+function updateAvail(){
+  var q=parseInt(document.getElementById('item-q').value)||0;
+  var b=parseInt(document.getElementById('item-broken').value)||0;
+  document.getElementById('item-avail').textContent='זמינים: '+Math.max(0,q-b);
+}
+function saveItem(){
+  var n=document.getElementById('item-n').value.trim();if(!n)return;
+  var obj={n:n,q:parseInt(document.getElementById('item-q').value)||1,qBroken:parseInt(document.getElementById('item-broken').value)||0,loc:document.getElementById('item-loc').value.trim(),note:document.getElementById('item-note').value.trim()};
+  if(_editItemIdx!==null){obj.id=_gequip[_editItemIdx].id;_gequip[_editItemIdx]=obj;}
+  else{obj.id=Date.now();_gequip.push(obj);}
+  save();closeModal('ovl-item');
+}
+function deleteItem(){if(!confirm('למחוק?'))return;_gequip.splice(_editItemIdx,1);save();closeModal('ovl-item');}
+function deleteItemAt(i){if(!confirm('למחוק?'))return;_gequip.splice(i,1);save();}
+
+// ── רשימת רכש ──
+function openPurchaseModal(idx){
+  _editPurIdx=idx;
+  document.getElementById('pur-title').textContent=idx===null?'הוסף לרכש':'עריכת פריט';
+  document.getElementById('pur-del').style.display=idx!==null?'inline-flex':'none';
+  var p=idx!==null?_purchaseList[idx]:{};
+  document.getElementById('pur-n').value=p.n||'';
+  document.getElementById('pur-q').value=p.q||1;
+  document.getElementById('pur-note').value=p.note||'';
+  document.getElementById('ovl-pur').classList.add('open');
+}
+function savePurchase(){
+  var n=document.getElementById('pur-n').value.trim();if(!n)return;
+  var obj={n:n,q:parseInt(document.getElementById('pur-q').value)||1,note:document.getElementById('pur-note').value.trim()};
+  if(_editPurIdx!==null)_purchaseList[_editPurIdx]=obj;else _purchaseList.push(obj);
+  save();closeModal('ovl-pur');
+}
+function deletePurchase(){if(!confirm('למחוק?'))return;_purchaseList.splice(_editPurIdx,1);save();closeModal('ovl-pur');}
+function deletePurchaseAt(i){if(!confirm('למחוק?'))return;_purchaseList.splice(i,1);save();}
+function purchaseToStock(i){
+  var p=_purchaseList[i];
+  if(!confirm('להעביר "'+p.n+'" למלאי?'))return;
+  _gequip.push({id:Date.now(),n:p.n,q:p.q,qBroken:0,loc:'',note:''});
+  _purchaseList.splice(i,1);
+  save();
+}
+
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+load();
+</script>
+</body>
+</html>

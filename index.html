@@ -3269,7 +3269,8 @@ function rPurchase(){
 }
 
 function shareEquipLink(){
-  var url=window.location.href.split('?')[0]+'?mode=equip&kb='+CKB;
+  var base=window.location.href.split('/').slice(0,-1).join('/')+'/equip.html';
+  var url=base+'?kb='+CKB;
   navigator.clipboard.writeText(url).then(()=>alert('קישור הועתק! ✅')).catch(()=>{prompt('העתיקי את הקישור:',url);});
 }
 
