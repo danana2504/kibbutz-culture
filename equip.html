@@ -109,6 +109,7 @@ input,select,textarea{width:100%;padding:8px 10px;border:1px solid #E2E0D8;borde
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
 var firebaseConfig={
   apiKey:"AIzaSyCZkJigKstL1NZHHJ0NqbtR3yLImOUIybs",
@@ -118,6 +119,7 @@ var firebaseConfig={
 };
 firebase.initializeApp(firebaseConfig);
 var db=firebase.database();
+var auth=firebase.auth();
 var kbId=new URLSearchParams(location.search).get('kb')||'kb0';
 var KB_PATH='kibbutz/main/kbData/'+kbId;
 
@@ -125,6 +127,9 @@ var _gequip=[];var _events=[];var _purchaseList=[];
 var _editItemIdx=null;var _editPurIdx=null;
 
 function toArr(v){if(!v)return[];if(Array.isArray(v))return v;return Object.values(v);}
+
+// כניסה אנונימית לצורך הרשאות כתיבה
+auth.signInAnonymously().catch(function(){}).finally(function(){load();});
 
 function load(){
   db.ref(KB_PATH).once('value').then(function(snap){
