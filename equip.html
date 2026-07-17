@@ -99,6 +99,7 @@ input,select,textarea{width:100%;padding:8px 10px;border:1px solid #E2E0D8;borde
   <div class="frow"><label class="fl">פריט</label><input type="text" id="pur-n" placeholder="מיקרופון, שולחן..."></div>
   <div class="frow"><label class="fl">כמות</label><input type="number" id="pur-q" value="1" min="1"></div>
   <div class="frow"><label class="fl">הערה</label><input type="text" id="pur-note" placeholder="סיבה, דחיפות..."></div>
+  <div class="frow"><label class="fl">סטטוס</label><select id="pur-status"><option value="pending">⏳ טרם נרכש</option><option value="purchased">✅ נרכש</option><option value="cancelled">❌ בוטל</option></select></div>
   <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:12px">
     <button class="btn btn-danger btn-sm" id="pur-del" style="display:none;margin-left:auto" onclick="deletePurchase()"><i class="ti ti-trash"></i></button>
     <button class="btn" onclick="closeModal('ovl-pur')">ביטול</button>
@@ -167,11 +168,15 @@ function renderEquip(){
 function renderPurchase(){
   var el=document.getElementById('purchase-list');
   if(!_purchaseList.length){el.innerHTML='<div class="empty">אין פריטים לרכישה</div>';return;}
+  var smap={pending:'⏳ טרם נרכש',purchased:'✅ נרכש',cancelled:'❌ בוטל'};
+  var scol={pending:'#7A7870',purchased:'#1F7A6E',cancelled:'#C9622A'};
   el.innerHTML=_purchaseList.map(function(p,i){
+    var st=p.status||'pending';
     return '<div class="row">'
-      +'<div style="flex:1"><div style="font-size:13px">'+p.n+'</div>'+(p.note?'<div style="font-size:11px;color:#7A7870">'+p.note+'</div>':'')+'</div>'
+      +'<div style="flex:1"><div style="font-size:13px;font-weight:500">'+p.n+'</div>'
+      +'<div style="font-size:11px;color:'+scol[st]+'">'+smap[st]+(p.note?' · '+p.note:'')+'</div></div>'
       +'<span style="font-size:12px;color:#7A7870;margin:0 4px">'+p.q+' יח\'</span>'
-      +'<button class="btn btn-success btn-sm" onclick="purchaseToStock('+i+')">✅ נרכש</button>'
+      +(st!=='purchased'?'<button class="btn btn-success btn-sm" onclick="purchaseToStock('+i+')">✅ נרכש</button>':'')
       +'<button class="ib" onclick="openPurchaseModal('+i+')"><i class="ti ti-edit"></i></button>'
       +'<button class="ib" onclick="deletePurchaseAt('+i+')" style="color:#C9622A"><i class="ti ti-trash"></i></button>'
       +'</div>';
@@ -226,11 +231,13 @@ function openPurchaseModal(idx){
   document.getElementById('pur-n').value=p.n||'';
   document.getElementById('pur-q').value=p.q||1;
   document.getElementById('pur-note').value=p.note||'';
+  document.getElementById('pur-status').value=p.status||'pending';
   document.getElementById('ovl-pur').classList.add('open');
 }
 function savePurchase(){
   var n=document.getElementById('pur-n').value.trim();if(!n)return;
-  var obj={n:n,q:parseInt(document.getElementById('pur-q').value)||1,note:document.getElementById('pur-note').value.trim()};
+  var status=document.getElementById('pur-status').value||'pending';
+  var obj={n:n,q:parseInt(document.getElementById('pur-q').value)||1,note:document.getElementById('pur-note').value.trim(),status:status};
   if(_editPurIdx!==null)_purchaseList[_editPurIdx]=obj;else _purchaseList.push(obj);
   save();closeModal('ovl-pur');
 }
