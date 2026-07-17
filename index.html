@@ -3274,12 +3274,27 @@ function rPurchase(){
   var el=$$('purchase-list');if(!el)return;
   var list=d.purchaseList||[];
   if(!list.length){el.innerHTML='<div style="font-size:12px;color:var(--txt2);text-align:center;padding:8px">אין פריטים לרכישה</div>';return;}
+  var smap={'pending':'⏳ טרם נרכש','purchased':'✅ נרכש','cancelled':'❌ בוטל'};
+  var scol={'pending':'var(--txt2)','purchased':'var(--tt)','cancelled':'var(--ct)'};
+  el.innerHTML=list.map(function(p,i){var st=p.status||'pending';
+    return '<div class="row"><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500">'+p.n+'</div>'
+      +'<div style="font-size:10px;color:'+scol[st]+'">'+smap[st]+(p.note?' · '+p.note:'')+'</div></div>'
+      +'<span style="font-size:11px;color:var(--txt2);">'+p.q+' יח"</span>'
+      +'<button class="ib" onclick="openPurchaseModal('+i+')"><i class="ti ti-edit" style="font-size:12px"></i></button>'
+      +'<button class="ib del" onclick="deletePurchaseItem('+i+')"><i class="ti ti-trash" style="font-size:12px"></i></button>'
+      +'</div>';
+  }).join('');
+}nction rPurchase(){
+  var d=D();
+  var el=$$('purchase-list');if(!el)return;
+  var list=d.purchaseList||[];
+  if(!list.length){el.innerHTML='<div style="font-size:12px;color:var(--txt2);text-align:center;padding:8px">אין פריטים לרכישה</div>';return;}
   var smap={pending:'⏳ טרם נרכש',purchased:'✅ נרכש',cancelled:'❌ בוטל'};
   var scol={pending:'var(--txt2)',purchased:'var(--tt)',cancelled:'var(--ct)'};
   el.innerHTML=list.map((p,i)=>{var st=p.status||'pending';
     return '<div class="row"><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500">'+p.n+'</div>'
       +'<div style="font-size:10px;color:'+scol[st]+'">'+smap[st]+(p.note?' · '+p.note:'')+'</div></div>'
-      +'<span style="font-size:11px;color:var(--txt2);min-width:30px;text-align:center">'+p.q+' יח'</span>'
+      +'<span style="font-size:11px;color:var(--txt2);min-width:30px;text-align:center">'+p.q+' יח'+'\''+'</span>'
       +'<button class="ib" onclick="openPurchaseModal('+i+')"><i class="ti ti-edit" style="font-size:12px"></i></button>'
       +'<button class="ib del" onclick="deletePurchaseItem('+i+')"><i class="ti ti-trash" style="font-size:12px"></i></button>'
       +'</div>';
