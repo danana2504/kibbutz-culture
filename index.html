@@ -3232,6 +3232,11 @@ function openPurchaseModal(idx){
   openO('ovl-purchase');
 }
 
+function deletePurchaseItem(idx){
+  if(!confirm('למחוק פריט מרשימת הרכש?'))return;
+  D().purchaseList.splice(idx,1);rPurchase();saveAll();
+}
+
 function purchasedToStockFromModal(){
   if(_editPurchaseIdx===null)return;
   purchasedToStock(_editPurchaseIdx);
