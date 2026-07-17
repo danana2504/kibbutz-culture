@@ -175,9 +175,12 @@ function renderPurchase(){
 
 function save(callback){
   if(callback)callback();
-  db.ref(KB_PATH+'/gequip').set(_gequip);
-  db.ref(KB_PATH+'/purchaseList').set(_purchaseList);
-  renderAll();
+  var p1=db.ref(KB_PATH+'/gequip').set(_gequip);
+  var p2=db.ref(KB_PATH+'/purchaseList').set(_purchaseList);
+  Promise.all([p1,p2]).then(function(){
+    document.getElementById('updated').textContent='עודכן: '+new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+    renderAll();
+  }).catch(function(e){alert('שגיאה בשמירה: '+e.message);});
 }
 
 // ── מלאי ──
