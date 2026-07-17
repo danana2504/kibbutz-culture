@@ -997,6 +997,7 @@ textarea{resize:vertical}
   <div class="frow"><label class="fl">הערה</label><input type="text" id="purchase-note" placeholder="סיבה, דחיפות..."></div>
   <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:8px">
     <button class="btn bd bsm" id="purchase-del-btn" style="display:none;margin-left:auto" onclick="deletePurchase()"><i class="ti ti-trash"></i></button>
+    <button class="btn bsm" id="purchase-stock-btn" style="display:none;background:var(--tl);border-color:var(--teal);color:var(--tt)" onclick="purchasedToStockFromModal()">✅ נרכש → מלאי</button>
     <button class="btn" onclick="closeO('ovl-purchase')">ביטול</button>
     <button class="btn bp" onclick="savePurchase()"><i class="ti ti-check"></i> שמור</button>
   </div>
@@ -3207,17 +3208,26 @@ var _editPurchaseIdx=null;
 function openPurchaseModal(idx){
   _editPurchaseIdx=idx;
   var delBtn=$$('purchase-del-btn');
+  var stockBtn=$$('purchase-stock-btn');
   if(idx!==null){
     var p=D().purchaseList[idx];
     $$('purchase-ttl').textContent='עריכת פריט לרכש';
     $$('purchase-n').value=p.n;$$('purchase-q').value=p.q;$$('purchase-note').value=p.note||'';
     if(delBtn)delBtn.style.display='flex';
+    if(stockBtn)stockBtn.style.display='inline-flex';
   } else {
     $$('purchase-ttl').textContent='הוסף לרשימת רכש';
     $$('purchase-n').value='';$$('purchase-q').value=1;$$('purchase-note').value='';
     if(delBtn)delBtn.style.display='none';
+    if(stockBtn)stockBtn.style.display='none';
   }
   openO('ovl-purchase');
+}
+
+function purchasedToStockFromModal(){
+  if(_editPurchaseIdx===null)return;
+  purchasedToStock(_editPurchaseIdx);
+  closeO('ovl-purchase');
 }
 
 function savePurchase(){
@@ -3261,7 +3271,6 @@ function rPurchase(){
     +(p.note?'<div style="font-size:10px;color:var(--txt2)">'+p.note+'</div>':'')
     +'</div>'
     +'<span style="font-size:11px;color:var(--txt2);min-width:40px;text-align:center">'+p.q+' יח\'</span>'
-    +'<button class="btn bsm" style="background:var(--tl);border-color:var(--teal);color:var(--tt);font-size:11px" onclick="purchasedToStock('+i+')" title="נרכש - העבר למלאי">✅ נרכש</button>'
     +'<button class="ib" onclick="openPurchaseModal('+i+')"><i class="ti ti-edit"></i></button>'
     +'</div>'
   ).join('');
