@@ -562,6 +562,7 @@ textarea{resize:vertical}
 <div class="pg" id="pg-gequip">
   <div class="sh"><span class="sh-t">מחסן ציוד</span>
     <div style="display:flex;gap:6px">
+      <button class="btn bsm" onclick="rGE();rPurchase();updateDash()" title="רענן נתונים"><i class="ti ti-refresh"></i> סנכרן</button>
       <button class="btn bsm" onclick="shareEquipLink()"><i class="ti ti-share"></i> שתף קישור</button>
       <button class="btn bsm" onclick="exportEquipExcel()"><i class="ti ti-file-spreadsheet"></i> ייצא Excel</button>
       <button class="btn bp bsm" onclick="openGEModal(null)"><i class="ti ti-plus"></i> הוסף פריט</button>
@@ -995,6 +996,13 @@ textarea{resize:vertical}
   <div class="frow"><label class="fl">שם הפריט</label><input type="text" id="purchase-n" placeholder="מיקרופון, שולחן..."></div>
   <div class="frow"><label class="fl">כמות נדרשת</label><input type="number" id="purchase-q" value="1" min="1"></div>
   <div class="frow"><label class="fl">הערה</label><input type="text" id="purchase-note" placeholder="סיבה, דחיפות..."></div>
+  <div class="frow"><label class="fl">סטטוס</label>
+    <select id="purchase-status">
+      <option value="pending">⏳ טרם נרכש</option>
+      <option value="purchased">✅ נרכש</option>
+      <option value="cancelled">❌ בוטל</option>
+    </select>
+  </div>
   <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:8px">
     <button class="btn bd bsm" id="purchase-del-btn" style="display:none;margin-left:auto" onclick="deletePurchase()"><i class="ti ti-trash"></i></button>
     <button class="btn bsm" id="purchase-stock-btn" style="display:none;background:var(--tl);border-color:var(--teal);color:var(--tt)" onclick="purchasedToStockFromModal()">✅ נרכש → מלאי</button>
@@ -3212,12 +3220,12 @@ function openPurchaseModal(idx){
   if(idx!==null){
     var p=D().purchaseList[idx];
     $$('purchase-ttl').textContent='עריכת פריט לרכש';
-    $$('purchase-n').value=p.n;$$('purchase-q').value=p.q;$$('purchase-note').value=p.note||'';
+    $$('purchase-n').value=p.n;$$('purchase-q').value=p.q;$$('purchase-note').value=p.note||'';if($$('purchase-status'))$$('purchase-status').value=p.status||'pending';
     if(delBtn)delBtn.style.display='flex';
     if(stockBtn)stockBtn.style.display='inline-flex';
   } else {
     $$('purchase-ttl').textContent='הוסף לרשימת רכש';
-    $$('purchase-n').value='';$$('purchase-q').value=1;$$('purchase-note').value='';
+    $$('purchase-n').value='';$$('purchase-q').value=1;$$('purchase-note').value='';if($$('purchase-status'))$$('purchase-status').value='pending';
     if(delBtn)delBtn.style.display='none';
     if(stockBtn)stockBtn.style.display='none';
   }
@@ -3233,7 +3241,7 @@ function purchasedToStockFromModal(){
 function savePurchase(){
   var n=$$('purchase-n').value.trim();if(!n)return;
   var d=D();if(!d.purchaseList)d.purchaseList=[];
-  var obj={n,q:parseInt($$('purchase-q').value)||1,note:$$('purchase-note').value.trim()};
+  var status=$$('purchase-status')?$$('purchase-status').value:'pending';var obj={n,q:parseInt($$('purchase-q').value)||1,note:$$('purchase-note').value.trim(),status};
   if(_editPurchaseIdx!==null) d.purchaseList[_editPurchaseIdx]=obj;
   else d.purchaseList.push(obj);
   closeO('ovl-purchase');rPurchase();saveAll();
